@@ -1,0 +1,107 @@
+@theme static {
+  --spacing: 0.25rem;
+  --spacing-page-gutter: 2rem;
+  --spacing-page-block: 2rem;
+  --spacing-section-gap: 2rem;
+  --spacing-panel-gap: 1.5rem;
+  --spacing-card-inset: 1.5rem;
+  --spacing-control-gap: 0.5rem;
+  --spacing-control-inset: 0.75rem;
+  --spacing-control-sm: 2rem;
+  --spacing-control-md: 2.5rem;
+  --spacing-control-lg: 2.75rem;
+  --spacing-field-sm: 10rem;
+  --spacing-field-md: 16rem;
+  --spacing-search: 20rem;
+  --spacing-icon-sm: 1rem;
+  --spacing-icon-md: 1.25rem;
+  --spacing-icon-lg: 1.5rem;
+  --spacing-sidebar: 15rem;
+  --spacing-sidebar-rail: 4rem;
+  --spacing-header: 4rem;
+  --spacing-table-cell-x: 1rem;
+  --spacing-table-cell-y: 0.75rem;
+  --spacing-table-cell-y-compact: 0.5rem;
+  --spacing-table-row: 3rem;
+  --spacing-table-row-compact: 2.5rem;
+  --spacing-table-header: 2.75rem;
+  --spacing-table-min: 64rem;
+  --spacing-chart-min: 16rem;
+
+  --container-page: 100rem;
+  --container-reading: 40rem;
+  --container-dialog-sm: 24rem;
+  --container-dialog-md: 36rem;
+  --container-dialog-lg: 48rem;
+
+  --breakpoint-desktop: 64rem;
+  --breakpoint-wide: 90rem;
+
+  --radius-*: initial;
+  --radius-none: 0;
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+  --radius-control: var(--radius-md);
+  --radius-card: var(--radius-lg);
+  --radius-badge: var(--radius-sm);
+  --radius-dialog: var(--radius-xl);
+
+  --border-width-default: 1px;
+  --border-width-emphasis: 2px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+  --chart-stroke-width: 2px;
+  --chart-grid-width: 1px;
+  --chart-marker-radius: 4px;
+
+  --shadow-*: initial;
+  --shadow-none: 0 0 var(--color-transparent);
+  --shadow-card: 0 2px 8px color-mix(in srgb, var(--color-black) 24%, transparent);
+  --shadow-dropdown: 0 8px 24px color-mix(in srgb, var(--color-black) 40%, transparent);
+  --shadow-dialog: 0 24px 64px color-mix(in srgb, var(--color-black) 56%, transparent);
+  --inset-shadow-surface: inset 0 1px 0 color-mix(in srgb, var(--color-white) 6%, transparent);
+
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dropdown: 20;
+  --z-overlay: 30;
+  --z-dialog: 40;
+  --z-popover: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+
+  --duration-instant: 0ms;
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --default-transition-duration: var(--duration-normal);
+  --default-transition-timing-function: var(--ease-standard);
+}
+
+@utility border-thin {
+  border-width: var(--border-width-default);
+}
+
+@utility border-thick {
+  border-width: var(--border-width-emphasis);
+}
+
+@utility focus-outline {
+  outline: var(--focus-width) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: var(--duration-instant);
+    --duration-normal: var(--duration-instant);
+    --duration-slow: var(--duration-instant);
+  }
+}
