@@ -12,11 +12,13 @@ export type ButtonProps = ComponentPropsWithRef<"button"> & {
 
 const variants = {
   primary:
-    "border-transparent bg-primary text-primary-foreground enabled:hover:bg-primary-hover enabled:active:bg-primary-active",
-  secondary: "border-border-strong bg-surface text-foreground enabled:hover:bg-surface-hover",
-  ghost: "border-transparent bg-transparent text-foreground enabled:hover:bg-surface-hover",
+    "border-transparent bg-primary text-primary-foreground enabled:hover:bg-primary-hover enabled:focus-visible:bg-primary-hover enabled:active:bg-primary-active",
+  secondary:
+    "border-border-strong bg-surface text-foreground enabled:hover:bg-surface-hover enabled:focus-visible:bg-surface-hover",
+  ghost:
+    "border-transparent bg-transparent text-foreground enabled:hover:bg-surface-hover enabled:focus-visible:bg-surface-hover",
   danger:
-    "border-transparent bg-danger text-danger-foreground enabled:hover:bg-danger-hover enabled:active:bg-danger-active",
+    "border-transparent bg-danger text-danger-foreground enabled:hover:bg-danger-hover enabled:focus-visible:bg-danger-hover enabled:active:bg-danger-active",
 };
 
 export function Button({
@@ -37,7 +39,7 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || props["aria-busy"]}
       className={cx(
-        "inline-flex shrink-0 items-center justify-center gap-control-gap rounded-control border-thin px-control-inset py-1 text-label transition-colors duration-(--duration-fast) focus-visible:focus-outline disabled:cursor-not-allowed disabled:border-border disabled:bg-disabled disabled:text-disabled-foreground",
+        "inline-flex shrink-0 items-center justify-center gap-control-gap rounded-control border-thin px-control-inset py-1 text-label transition-colors duration-(--duration-fast) outline-none disabled:cursor-not-allowed disabled:border-border disabled:bg-disabled disabled:text-disabled-foreground",
         { sm: "min-h-control-sm", md: "min-h-control-md", lg: "min-h-control-lg" }[controlSize],
         variants[variant],
         className,

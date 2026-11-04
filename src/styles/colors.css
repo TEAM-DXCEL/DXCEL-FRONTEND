@@ -41,17 +41,17 @@
   --color-yellow-900: #484819;
   --color-yellow-950: #272708;
 
-  --color-neutral-50: #faf8f6;
-  --color-neutral-100: #f2eeeb;
-  --color-neutral-200: #e5ded8;
-  --color-neutral-300: #d2c8c0;
-  --color-neutral-400: #c1b7af;
-  --color-neutral-500: #998a80;
-  --color-neutral-600: #78695f;
-  --color-neutral-700: #5e4f46;
-  --color-neutral-800: #48382f;
-  --color-neutral-900: #36231e;
-  --color-neutral-950: #281412;
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #eeeeee;
+  --color-neutral-300: #dedede;
+  --color-neutral-400: #b5b5b5;
+  --color-neutral-500: #888888;
+  --color-neutral-600: #666666;
+  --color-neutral-700: #4a4a4a;
+  --color-neutral-800: #333333;
+  --color-neutral-900: #222222;
+  --color-neutral-950: #171717;
 
   --color-red-50: #fff1f0;
   --color-red-100: #ffe0dc;
@@ -78,12 +78,17 @@
   --color-blue-950: #15213d;
 }
 
-:root {
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
   --background: var(--color-black);
   --foreground: var(--color-neutral-50);
   --surface: var(--color-neutral-950);
   --surface-muted: var(--color-neutral-900);
   --surface-hover: var(--color-neutral-800);
+  --control-focus: var(--color-neutral-800);
+  --select-selected: color-mix(in srgb, var(--color-white) 12%, var(--color-black));
+  --select-selected-foreground: var(--color-neutral-50);
   --surface-inverse: var(--color-neutral-100);
   --foreground-muted: var(--color-neutral-300);
   --foreground-subtle: var(--color-neutral-400);
@@ -130,7 +135,6 @@
 
   --link: var(--color-green-300);
   --link-hover: var(--color-green-100);
-  --focus-ring: var(--color-yellow-400);
   --selection: var(--color-yellow-300);
   --selection-foreground: var(--color-neutral-950);
   --disabled: var(--color-neutral-900);
@@ -151,12 +155,74 @@
   --chart-neutral: var(--color-neutral-400);
 }
 
+[data-theme="light"] {
+  color-scheme: light;
+  --background: var(--color-neutral-50);
+  --foreground: var(--color-neutral-950);
+  --surface: var(--color-white);
+  --surface-muted: var(--color-neutral-100);
+  --surface-hover: var(--color-neutral-200);
+  --control-focus: var(--color-neutral-100);
+  --select-selected: color-mix(in srgb, var(--color-black) 6%, var(--color-white));
+  --select-selected-foreground: var(--color-neutral-950);
+  --surface-inverse: var(--color-neutral-950);
+  --foreground-muted: var(--color-neutral-700);
+  --foreground-subtle: var(--color-neutral-600);
+  --foreground-inverse: var(--color-neutral-50);
+  --border: var(--color-neutral-300);
+  --border-strong: var(--color-neutral-500);
+  --primary-subtle: var(--color-green-50);
+  --primary-text: var(--color-green-800);
+  --primary-border: var(--color-green-700);
+  --accent-subtle: var(--color-orange-50);
+  --accent-text: var(--color-orange-800);
+  --accent-border: var(--color-orange-700);
+  --highlight-subtle: var(--color-yellow-50);
+  --success: var(--color-green-800);
+  --success-subtle: var(--color-green-50);
+  --success-foreground: var(--color-white);
+  --success-border: var(--color-green-700);
+  --warning: var(--color-yellow-900);
+  --warning-subtle: var(--color-yellow-100);
+  --warning-foreground: var(--color-white);
+  --warning-border: var(--color-yellow-700);
+  --danger: var(--color-red-700);
+  --danger-hover: var(--color-red-800);
+  --danger-active: var(--color-red-900);
+  --danger-subtle: var(--color-red-50);
+  --danger-foreground: var(--color-white);
+  --danger-border: var(--color-red-600);
+  --info: var(--color-blue-700);
+  --info-subtle: var(--color-blue-50);
+  --info-foreground: var(--color-white);
+  --info-border: var(--color-blue-600);
+  --link: var(--color-green-800);
+  --link-hover: var(--color-green-950);
+  --disabled: var(--color-neutral-100);
+  --disabled-foreground: var(--color-neutral-600);
+  --chart-1: var(--color-green-700);
+  --chart-2: var(--color-orange-700);
+  --chart-3: var(--color-blue-700);
+  --chart-4: var(--color-yellow-800);
+  --chart-5: var(--color-red-700);
+  --chart-6: var(--color-neutral-800);
+  --chart-grid: var(--color-neutral-200);
+  --chart-axis: var(--color-neutral-600);
+  --chart-baseline: var(--color-neutral-950);
+  --chart-positive: var(--color-green-800);
+  --chart-negative: var(--color-red-700);
+  --chart-neutral: var(--color-neutral-600);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-surface-hover: var(--surface-hover);
+  --color-control-focus: var(--control-focus);
+  --color-select-selected: var(--select-selected);
+  --color-select-selected-foreground: var(--select-selected-foreground);
   --color-surface-inverse: var(--surface-inverse);
   --color-foreground-muted: var(--foreground-muted);
   --color-foreground-subtle: var(--foreground-subtle);
@@ -200,7 +266,6 @@
   --color-info-border: var(--info-border);
   --color-link: var(--link);
   --color-link-hover: var(--link-hover);
-  --color-focus-ring: var(--focus-ring);
   --color-selection: var(--selection);
   --color-selection-foreground: var(--selection-foreground);
   --color-disabled: var(--disabled);

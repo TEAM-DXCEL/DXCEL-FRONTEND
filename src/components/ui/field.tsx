@@ -12,7 +12,7 @@ export type FieldProps = {
 };
 
 export const controlClasses =
-  "w-full min-w-0 rounded-control border-thin border-border-strong bg-surface px-control-inset text-body text-foreground placeholder:text-foreground-subtle transition-colors duration-(--duration-fast) focus-visible:focus-outline aria-invalid:border-danger disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground";
+  "w-full min-w-0 rounded-control border-thin border-border-strong bg-surface px-control-inset text-body text-foreground placeholder:text-foreground-subtle transition-colors duration-(--duration-fast) outline-none focus:bg-control-focus aria-invalid:border-danger disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground";
 export const controlSizes = {
   sm: "min-h-control-sm py-0.5",
   md: "min-h-control-md py-1",
