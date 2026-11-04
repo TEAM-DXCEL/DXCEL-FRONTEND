@@ -46,6 +46,10 @@
 | `table-header` | 44px | `h-table-header` |
 | `table-min` | 1024px | 스크롤 영역 안의 표에 `min-w-table-min` |
 | `chart-min` | 256px | `min-h-chart-min` |
+| `select-list-max` | 320px | 드롭다운 목록 최대 높이 |
+| `select-item-gap` | 4px | 옵션 사이 간격 |
+| `select-sheet-gap` | 8px | Select와 드롭다운 패널 사이 간격 |
+| `select-inset` | 8px | 드롭다운 패널 내부 여백 |
 
 | 레이아웃 토큰 | 기본값 | 클래스 |
 | --- | --- | --- |
@@ -63,7 +67,7 @@
 | --- | --- |
 | 기본 테두리 | `--border-width-default: 1px` / `border-thin` |
 | 강조 테두리 | `--border-width-emphasis: 2px` / `border-thick` |
-| 포커스 | 2px outline + 2px offset / `focus-visible:focus-outline` |
+| 포커스 | 추가 외곽선 없이 배경 변화 / `focus:bg-control-focus` |
 | 기본 라운드 | `rounded-none/xs/sm/md/lg/xl/full`: 0 / 2 / 4 / 6 / 8 / 12px / pill |
 | 용도별 라운드 | `rounded-control/card/badge/dialog`: 6 / 8 / 4 / 12px |
 | 그림자 | `shadow-none/card/dropdown/dialog` |
@@ -85,7 +89,7 @@
 <section className="rounded-card border-thin border-border bg-surface p-card-inset shadow-card">
   <h2 className="text-heading-sm">실험 비교</h2>
   <p className="mt-2 text-body text-foreground-muted">같은 평가 조건의 결과를 비교합니다.</p>
-  <button className="mt-panel-gap inline-flex min-h-control-md items-center justify-center gap-control-gap rounded-control bg-primary px-control-inset text-label text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary-hover focus-visible:focus-outline">
+  <button className="mt-panel-gap inline-flex min-h-control-md items-center justify-center gap-control-gap rounded-control bg-primary px-control-inset text-label text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary-hover focus-visible:bg-primary-hover outline-none">
     비교하기
   </button>
 </section>
