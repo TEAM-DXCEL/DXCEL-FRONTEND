@@ -13,5 +13,5 @@ next-env.d.ts
 .wrangler/
 .superpowers/
 docs/superpowers/
-/AGENTS.md
 /docs/server-integration.md
+/AGENTS.md
