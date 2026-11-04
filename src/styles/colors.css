@@ -1,7 +1,3 @@
-/* BBDW25-inspired screen approximations, not official brand specifications.
- * Literal colors live here; components should use the semantic aliases below.
- * static keeps palette variables available for SVG/canvas charts as well.
- */
 @theme static {
   --color-*: initial;
   --color-transparent: transparent;
@@ -57,7 +53,6 @@
   --color-neutral-900: #36231e;
   --color-neutral-950: #281412;
 
-  /* Supporting hues for errors and information; not reference brand colors. */
   --color-red-50: #fff1f0;
   --color-red-100: #ffe0dc;
   --color-red-200: #ffc3ba;
@@ -83,7 +78,6 @@
   --color-blue-950: #15213d;
 }
 
-/* Dark theme. Keep role names stable when adding future themes. */
 :root {
   --background: var(--color-black);
   --foreground: var(--color-neutral-50);
