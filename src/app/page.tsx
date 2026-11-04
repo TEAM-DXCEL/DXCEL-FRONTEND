@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { ThemeScope } from "@/components/ui/theme-scope";
 
 export default function HomePage() {
   return (
@@ -15,7 +16,7 @@ export default function HomePage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-panel-gap desktop:grid-cols-2">
+      <ThemeScope theme="light" className="grid grid-cols-1 gap-panel-gap desktop:grid-cols-2">
         <Card aria-labelledby="button-preview">
           <CardHeader>
             <CardTitle id="button-preview">Button</CardTitle>
@@ -87,22 +88,29 @@ export default function HomePage() {
             <Select
               label="실험 상태"
               defaultValue="draft"
-              description="브라우저 기본 선택 메뉴를 사용합니다."
-            >
-              <option value="draft">설계 중</option>
-              <option value="running">실행 중</option>
-              <option value="complete">완료</option>
-            </Select>
-            <Select label="프로젝트 선택" defaultValue="" error="프로젝트를 선택하세요.">
-              <option value="">선택하세요</option>
-              <option value="example">예시 프로젝트</option>
-            </Select>
-            <Select label="비활성 선택" defaultValue="default" disabled>
-              <option value="default">기본 설정</option>
-            </Select>
+              description="현재 선택과 키보드 이동 상태를 확인하세요."
+              options={[
+                { value: "draft", label: "설계 중" },
+                { value: "running", label: "실행 중" },
+                { value: "complete", label: "완료" },
+                { value: "unavailable", label: "선택 불가", disabled: true },
+              ]}
+            />
+            <Select
+              label="프로젝트 선택"
+              placeholder="선택하세요"
+              error="프로젝트를 선택하세요."
+              options={[{ value: "example", label: "예시 프로젝트" }]}
+            />
+            <Select
+              label="비활성 선택"
+              defaultValue="default"
+              disabled
+              options={[{ value: "default", label: "기본 설정" }]}
+            />
           </CardContent>
         </Card>
-      </div>
+      </ThemeScope>
     </main>
   );
 }
