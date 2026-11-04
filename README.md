@@ -15,7 +15,7 @@ pnpm dev
 ```
 
 개발 주소는 [http://127.0.0.1:3000](http://127.0.0.1:3000)입니다.
-현재 시작 화면은 Supabase 연결 없이 실행됩니다.
+현재 대시보드 레이아웃은 Supabase 연결 없이 실행됩니다. 컴포넌트 미리보기는 `/ui-preview`에서 확인합니다.
 백엔드가 실행되면 `.env.local`에 로컬 publishable/anon key를 입력합니다.
 관리자 키와 수집 token은 `NEXT_PUBLIC_*`에 넣지 않습니다.
 
@@ -56,10 +56,11 @@ PR과 main/develop/작업 브랜치 push에 CI가 실행됩니다.
 
 ## 설계 문서
 
+- [데스크톱 공통 레이아웃과 페이지 경로](docs/dashboard-layout.md)
 - [공통 UI 컴포넌트 사용법](docs/ui-components.md)
 - [데스크톱 타이포·간격·크기·효과 토큰](docs/design-tokens.md)
 - [컬러 토큰과 사용 규칙](docs/color-tokens.md)
 - [전체 구조·페이지·무료 배포 설계 초안](docs/architecture.md)
 - DB·수집 API 계약은 `TEAM-DXCEL/DXCEL-BACKEND`의 `docs/database-design.md`에서 관리합니다.
 
-현재는 개발 기반과 공통 UI 컴포넌트 미리보기가 있습니다. 로그인·실험 조회·비교 기능은 후속 구현 범위입니다.
+현재는 개발 기반·공통 UI·데스크톱 레이아웃이 있습니다. 로그인·실험 조회·비교 기능은 후속 구현 범위입니다.
