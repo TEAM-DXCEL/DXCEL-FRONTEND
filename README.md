@@ -27,7 +27,8 @@ pnpm build
 pnpm preview
 ```
 
-- `check`: 포맷·ESLint·TypeScript 검사
+- `check`: 포맷·ESLint·TypeScript·컴포넌트 테스트
+- `test`, `test:watch`: UI 동작 테스트 실행·감시
 - `format`: 소스와 개발 설정 포맷
 - `build`: Cloudflare Pages용 `out/` 정적 파일 생성
 - `preview`: 빌드 결과를 로컬 3000 포트에서 확인. 개발 프로세스와 동시에 사용하지 않습니다.
@@ -52,10 +53,11 @@ ESLint 9는 현재 Next.js 린트 플러그인의 peer 범위에 맞춰 고정�
 지원되지 않는 메이저 강제 override는 적용하지 않습니다.
 호환되는 upstream 수정 버전이 나오면 별도 의존성 커밋으로 갱신합니다.
 
-PR과 main/작업 브랜치 push에 CI가 실행되도록 설정했습니다. 원격에 push한 뒤 실제 Actions 실행 결과를 확인해야 합니다.
+PR과 main/develop/작업 브랜치 push에 CI가 실행됩니다.
 
 ## 설계 문서
 
+- [공통 UI 컴포넌트 사용법](docs/ui-components.md)
 - [데스크톱 타이포·간격·크기·효과 토큰](docs/design-tokens.md)
 - [컬러 토큰과 사용 규칙](docs/color-tokens.md)
 - [전체 구조·페이지·무료 배포 설계 초안](docs/architecture.md)
