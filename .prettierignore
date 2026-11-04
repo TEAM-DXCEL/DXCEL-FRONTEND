@@ -5,7 +5,7 @@ coverage/
 .superpowers/
 /AGENTS.md
 next-env.d.ts
-package-lock.json
+pnpm-lock.yaml
 docs/
 .env*
 *.tsbuildinfo

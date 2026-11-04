@@ -15,3 +15,8 @@ next-env.d.ts
 docs/superpowers/
 /docs/server-integration.md
 /AGENTS.md
+
+# Use pnpm exclusively
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock
