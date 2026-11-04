@@ -1,0 +1,7 @@
+packages:
+  - .
+
+saveExact: true
+engineStrict: true
+strictDepBuilds: true
+allowBuilds: {}

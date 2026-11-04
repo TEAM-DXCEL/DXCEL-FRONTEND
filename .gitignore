@@ -1,0 +1,22 @@
+.DS_Store
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.log
+.wrangler/
+.superpowers/
+docs/superpowers/
+/docs/server-integration.md
+/AGENTS.md
+
+# Use pnpm exclusively
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock

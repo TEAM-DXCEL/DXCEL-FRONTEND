@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+coverage/
+.superpowers/
+/AGENTS.md
+next-env.d.ts
+pnpm-lock.yaml
+docs/
+.env*
+*.tsbuildinfo
