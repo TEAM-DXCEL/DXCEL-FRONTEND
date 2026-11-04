@@ -56,6 +56,7 @@ PR과 main/작업 브랜치 push에 CI가 실행되도록 설정했습니다. �
 
 ## 설계 문서
 
+- [컬러 토큰과 사용 규칙](docs/color-tokens.md)
 - [전체 구조·페이지·무료 배포 설계 초안](docs/architecture.md)
 - DB·수집 API 계약은 `TEAM-DXCEL/DXCEL-BACKEND`의 `docs/database-design.md`에서 관리합니다.
 
