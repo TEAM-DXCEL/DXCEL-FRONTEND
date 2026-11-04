@@ -42,7 +42,7 @@ Cloudflare Pages 연결 시 build command는 `pnpm build`, output directory는 `
 - 기능·수정·개발 도구·문서 변경을 목적별 커밋으로 나눕니다.
 - 커밋 메시지는 `feat:`, `fix:`, `chore:`, `docs:`, `ci:` 형식을 사용합니다.
 - 커밋 전 `pnpm check`, 정적 경로/설정 변경 시 `pnpm build`를 실행합니다.
-- 실제 기능을 구현할 때 해당 동작의 테스트를 추가합니다. 초기 시작 화면에는 형식적인 테스트를 두지 않습니다.
+- 단순 UI·스타일·props 전달 및 구현을 그대로 반복하는 로직 테스트는 추가하지 않습니다. 포맷·린트·타입 검사와 빌드 검증은 유지합니다.
 - `.env.local`, `node_modules/`, `.next/`, `out/`은 Git에서 제외합니다.
 - 기존 설계 문서는 자동 포맷 대상에서 제외해 설계 내용과 코드 스타일 변경을 분리합니다.
 
@@ -52,13 +52,14 @@ ESLint 9는 현재 Next.js 린트 플러그인의 peer 범위에 맞춰 고정�
 지원되지 않는 메이저 강제 override는 적용하지 않습니다.
 호환되는 upstream 수정 버전이 나오면 별도 의존성 커밋으로 갱신합니다.
 
-PR과 main/작업 브랜치 push에 CI가 실행되도록 설정했습니다. 원격에 push한 뒤 실제 Actions 실행 결과를 확인해야 합니다.
+PR과 main/develop/작업 브랜치 push에 CI가 실행됩니다.
 
 ## 설계 문서
 
+- [공통 UI 컴포넌트 사용법](docs/ui-components.md)
 - [데스크톱 타이포·간격·크기·효과 토큰](docs/design-tokens.md)
 - [컬러 토큰과 사용 규칙](docs/color-tokens.md)
 - [전체 구조·페이지·무료 배포 설계 초안](docs/architecture.md)
 - DB·수집 API 계약은 `TEAM-DXCEL/DXCEL-BACKEND`의 `docs/database-design.md`에서 관리합니다.
 
-현재는 개발 기반과 최소 시작 화면만 있습니다. 로그인·실험 조회·비교 기능은 후속 구현 범위입니다.
+현재는 개발 기반과 공통 UI 컴포넌트 미리보기가 있습니다. 로그인·실험 조회·비교 기능은 후속 구현 범위입니다.

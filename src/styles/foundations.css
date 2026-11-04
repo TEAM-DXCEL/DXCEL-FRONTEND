@@ -13,6 +13,10 @@
   --spacing-field-sm: 10rem;
   --spacing-field-md: 16rem;
   --spacing-search: 20rem;
+  --spacing-select-list-max: 20rem;
+  --spacing-select-item-gap: 0.25rem;
+  --spacing-select-sheet-gap: 0.5rem;
+  --spacing-select-inset: 0.5rem;
   --spacing-icon-sm: 1rem;
   --spacing-icon-md: 1.25rem;
   --spacing-icon-lg: 1.5rem;
@@ -52,8 +56,6 @@
 
   --border-width-default: 1px;
   --border-width-emphasis: 2px;
-  --focus-width: 2px;
-  --focus-offset: 2px;
   --chart-stroke-width: 2px;
   --chart-grid-width: 1px;
   --chart-marker-radius: 4px;
@@ -91,11 +93,6 @@
 
 @utility border-thick {
   border-width: var(--border-width-emphasis);
-}
-
-@utility focus-outline {
-  outline: var(--focus-width) solid var(--focus-ring);
-  outline-offset: var(--focus-offset);
 }
 
 @media (prefers-reduced-motion: reduce) {
