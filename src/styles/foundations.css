@@ -22,6 +22,7 @@
   --spacing-icon-lg: 1.5rem;
   --spacing-sidebar: 15rem;
   --spacing-sidebar-rail: 4rem;
+  --spacing-brand-mark: 2.5rem;
   --spacing-header: 4rem;
   --spacing-table-cell-x: 1rem;
   --spacing-table-cell-y: 0.75rem;
@@ -30,6 +31,7 @@
   --spacing-table-row-compact: 2.5rem;
   --spacing-table-header: 2.75rem;
   --spacing-table-min: 64rem;
+  --spacing-table-region-max: min(36rem, 60dvh);
   --spacing-chart-min: 16rem;
 
   --container-page: 100rem;
