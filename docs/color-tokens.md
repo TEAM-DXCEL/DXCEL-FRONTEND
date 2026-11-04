@@ -10,7 +10,7 @@
 | 오렌지 | `orange-500` | `#FF743D` | Accent, 보조 강조 |
 | 옐로 | `yellow-400` | `#FCFC54` | Highlight, 선택 강조 |
 | 웜 그레이 | `neutral-400` | `#C1B7AF` | 중립 팔레트의 기준 |
-| 잉크 브라운 | `neutral-950` | `#281412` | 본문, 역상 배경 |
+| 잉크 브라운 | `neutral-950` | `#281412` | 카드 배경·네온 위 글자 |
 
 `src/styles/colors.css`가 색상의 단일 원본이다. Green·orange·yellow·neutral은 각각 50–950의 11단계다. 오류와 정보 표시는 보조 red·blue 팔레트를 같은 단계로 제공한다. Red·blue는 레퍼런스에서 추출한 브랜드 색상이 아니다.
 
@@ -42,14 +42,14 @@
 ## 사용
 
 ```tsx
-<section className="border border-border bg-surface text-foreground">
+<section className="border-thin border-border bg-surface text-foreground">
   <p className="text-foreground-muted">실험 설명</p>
   <button
-    className="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:bg-disabled disabled:text-disabled-foreground"
+    className="bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active focus-visible:focus-outline disabled:bg-disabled disabled:text-disabled-foreground"
   >
     실험 등록
   </button>
-  <span className="border border-success-border bg-success-subtle text-success">완료</span>
+  <span className="border-thin border-success-border bg-success-subtle text-success">완료</span>
 </section>
 ```
 
