@@ -5,10 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { ThemeScope } from "@/components/ui/theme-scope";
 
-export default function HomePage() {
+export const metadata = { title: "UI 미리보기 | DXCEL" };
+
+export default function UiPreviewPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-page flex-col gap-section-gap px-page-gutter py-page-block">
       <header className="flex flex-col gap-2">
+        <Link
+          href="/overview"
+          className="w-fit rounded-control text-label text-link underline-offset-4 outline-none hover:underline focus-visible:bg-primary-subtle focus-visible:underline"
+        >
+          ← 워크스페이스로 돌아가기
+        </Link>
         <p className="text-label tracking-wide text-primary-text">DXCEL / UI</p>
         <h1 className="text-heading-lg">컴포넌트 미리보기</h1>
         <p className="text-body text-foreground-muted">
@@ -114,3 +122,4 @@ export default function HomePage() {
     </main>
   );
 }
+import Link from "next/link";
