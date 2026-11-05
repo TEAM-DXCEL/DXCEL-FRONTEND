@@ -39,12 +39,14 @@
 | `field-sm/md`, `search` | 160 / 256 / 320px | `w-field-md w-search` |
 | `icon-sm/md/lg` | 16 / 20 / 24px | `size-icon-md` |
 | `sidebar`, `sidebar-rail` | 240 / 64px | `w-sidebar shrink-0` |
+| `brand-mark` | 40px | `size-brand-mark` |
 | `header` | 64px | `min-h-header` |
 | `table-cell-x/y` | 16 / 12px | `px-table-cell-x py-table-cell-y` |
 | `table-cell-y-compact` | 8px | `py-table-cell-y-compact` |
 | `table-row`, `table-row-compact` | 48 / 40px | `h-table-row` |
 | `table-header` | 44px | `h-table-header` |
 | `table-min` | 1024px | 스크롤 영역 안의 표에 `min-w-table-min` |
+| `table-region-max` | min(576px, 60dvh) | 표 영역 최대 높이 |
 | `chart-min` | 256px | `min-h-chart-min` |
 | `select-list-max` | 320px | 드롭다운 목록 최대 높이 |
 | `select-item-gap` | 4px | 옵션 사이 간격 |
