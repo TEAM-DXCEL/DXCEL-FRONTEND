@@ -28,6 +28,8 @@
 
 `WorkspaceBrand`가 `dxcel-logo.svg`를 사용한다. 넓은 화면에서는 텍스트와 함께, 좁은 rail에서는 로고만 표시한다. 원본 SVG는 그대로 보존한다.
 
+파비콘도 같은 로고에서 생성한다. `src/app/favicon.ico`는 16·32·48px, `src/app/icon.png`는 192px, `src/app/apple-icon.png`는 180px이다. Next.js 파일 규칙으로 모든 페이지에 자동 연결된다. 로고를 교체할 때 이 세 파일도 함께 갱신한다.
+
 ## 크기와 스크롤
 
 1024px 이상에서 사이드바는 240px, 그보다 좁은 창에서는 64px rail로 표시한다. 숨겨지는 메뉴 이름은 접근 가능한 label과 title로 유지한다. 헤더는 64px, 본문 여백은 32px, 최대 폭은 1600px이며 기존 토큰을 사용한다.
