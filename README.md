@@ -56,6 +56,7 @@ PR과 main/develop/작업 브랜치 push에 CI가 실행됩니다.
 
 ## 설계 문서
 
+- [실험 목록과 도메인 타입](docs/experiments.md)
 - [데스크톱 공통 레이아웃과 페이지 경로](docs/dashboard-layout.md)
 - [공통 UI 컴포넌트 사용법](docs/ui-components.md)
 - [데스크톱 타이포·간격·크기·효과 토큰](docs/design-tokens.md)
@@ -63,4 +64,4 @@ PR과 main/develop/작업 브랜치 push에 CI가 실행됩니다.
 - [전체 구조·페이지·무료 배포 설계 초안](docs/architecture.md)
 - DB·수집 API 계약은 `TEAM-DXCEL/DXCEL-BACKEND`의 `docs/database-design.md`에서 관리합니다.
 
-현재는 개발 기반·공통 UI·데스크톱 레이아웃이 있습니다. 로그인·실험 조회·비교 기능은 후속 구현 범위입니다.
+현재는 개발 기반·공통 UI·데스크톱 레이아웃과 샘플 기반 실험 목록이 있습니다. 로그인·실제 데이터 조회·비교 기능은 후속 구현 범위입니다.
