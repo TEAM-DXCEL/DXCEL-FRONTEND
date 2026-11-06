@@ -8,6 +8,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## 프론트엔드 작업
+
+프론트엔드 코드를 바꾸기 전에 [구현과 검증 규칙](harness/frontend-workflow.md)을 읽고 적용합니다.
+
 ## 커밋과 PR
 
 커밋을 만들거나 PR을 열고 수정하기 전에 [Git 작업 규칙](harness/git-workflow.md)을 읽고 적용합니다. 커밋 제목과 PR 제목은 유형 접두사 뒤에 한국어로 작성합니다.
