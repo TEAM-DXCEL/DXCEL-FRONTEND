@@ -1,3 +1,4 @@
+import type { ReactNode, Ref } from "react";
 import { TableViewport } from "@/components/layout/table-viewport";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { experimentCode, experimentStatus, statusLabels } from "./list-query";
@@ -18,9 +19,17 @@ const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
 });
 
-export function ExperimentTable({ items }: { items: readonly ExperimentListItem[] }) {
+export function ExperimentTable({
+  items,
+  footer,
+  viewportRef,
+}: {
+  items: readonly ExperimentListItem[];
+  footer?: ReactNode;
+  viewportRef?: Ref<HTMLDivElement>;
+}) {
   return (
-    <TableViewport label="실험 목록 표">
+    <TableViewport label="실험 목록 표" ref={viewportRef}>
       <table className="w-full min-w-table-min border-collapse text-left text-table">
         <caption className="sr-only">
           실험 설계와 최신 실행 상태. 제목 아래에서 변경 이유를 펼칠 수 있습니다.
@@ -107,6 +116,7 @@ export function ExperimentTable({ items }: { items: readonly ExperimentListItem[
           })}
         </tbody>
       </table>
+      {footer}
     </TableViewport>
   );
 }

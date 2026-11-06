@@ -1,5 +1,6 @@
 "use client";
 
+import { useInfiniteWindow } from "@/hooks/use-infinite-window";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -69,7 +70,6 @@ export function ExperimentList() {
   const current = loaded?.key === key ? loaded : null;
   const result = current?.state === "ready" ? current.result : null;
   const hasFilters = Boolean(query.search || query.status !== "all");
-  const pages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
 
   return (
     <Card>
@@ -140,16 +140,14 @@ export function ExperimentList() {
               평가를 의미하지 않습니다.
             </p>
             {result.items.length ? (
-              <ExperimentTable items={result.items} />
+              <InfiniteExperimentResults key={key} result={result} />
             ) : (
               <div className="flex flex-col items-center gap-control-inset rounded-card border-thin border-border py-section-gap text-center">
                 <p className="text-label">
                   {hasFilters ? "조건에 맞는 실험이 없습니다." : "아직 등록된 실험이 없습니다."}
                 </p>
                 <p className="text-body text-foreground-muted">
-                  {hasFilters
-                    ? "검색어나 실행 상태를 변경해 보세요."
-                    : "실험이 등록되면 이곳에서 설계와 실행 이력을 확인할 수 있습니다."}
+                  검색어나 실행 상태를 변경해 보세요.
                 </p>
                 {hasFilters && (
                   <Button
@@ -161,41 +159,40 @@ export function ExperimentList() {
                 )}
               </div>
             )}
-            {result.total > 0 && (
-              <nav
-                aria-label="실험 목록 페이지"
-                className="flex items-center justify-between gap-panel-gap pt-2"
-              >
-                <p className="text-meta text-foreground-muted">
-                  {(result.page - 1) * result.pageSize + 1}–
-                  {Math.min(result.page * result.pageSize, result.total)} / {result.total}개
-                </p>
-                <div className="flex items-center gap-control-inset">
-                  <Button
-                    variant="secondary"
-                    controlSize="sm"
-                    disabled={result.page <= 1}
-                    onClick={() => updateQuery({ page: String(result.page - 1) })}
-                  >
-                    이전
-                  </Button>
-                  <span className="text-meta tabular-nums">
-                    {result.page} / {pages}
-                  </span>
-                  <Button
-                    variant="secondary"
-                    controlSize="sm"
-                    disabled={result.page >= pages}
-                    onClick={() => updateQuery({ page: String(result.page + 1) })}
-                  >
-                    다음
-                  </Button>
-                </div>
-              </nav>
-            )}
           </div>
         )}
       </div>
     </Card>
+  );
+}
+
+function InfiniteExperimentResults({ result }: { result: ExperimentListResult }) {
+  const { rootRef, sentinelRef, limit, hasMore, loadMoreWithFocus } = useInfiniteWindow(
+    result.items.length,
+  );
+  return (
+    <>
+      <p className="text-meta text-foreground-muted" role="status">
+        {limit} / {result.total}개 표시 · 아래로 스크롤해 계속 확인하세요.
+      </p>
+      <ExperimentTable
+        items={result.items.slice(0, limit)}
+        viewportRef={rootRef}
+        footer={
+          <div
+            ref={sentinelRef}
+            className="sticky start-0 p-control-inset text-center text-meta text-foreground-muted"
+          >
+            {hasMore ? (
+              <Button variant="ghost" onClick={loadMoreWithFocus}>
+                더 불러오기 ↓
+              </Button>
+            ) : (
+              "모든 실험을 확인했습니다."
+            )}
+          </div>
+        }
+      />
+    </>
   );
 }

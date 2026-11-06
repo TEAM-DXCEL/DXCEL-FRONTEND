@@ -30,13 +30,5 @@ export async function listExperiments(
       b.experiment.number - a.experiment.number
     );
   });
-  const pageSize = 8;
-  const page = Math.min(query.page, Math.max(1, Math.ceil(matches.length / pageSize)));
-  return {
-    items: matches.slice((page - 1) * pageSize, page * pageSize),
-    total: matches.length,
-    page,
-    pageSize,
-    source: "sample",
-  };
+  return { items: matches, total: matches.length, source: "sample" };
 }
