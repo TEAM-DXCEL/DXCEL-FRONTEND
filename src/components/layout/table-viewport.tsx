@@ -1,8 +1,17 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
-export function TableViewport({ label, children }: { label: string; children: ReactNode }) {
+export function TableViewport({
+  label,
+  children,
+  ref,
+}: {
+  label: string;
+  children: ReactNode;
+  ref?: Ref<HTMLDivElement>;
+}) {
   return (
     <div
+      ref={ref}
       role="region"
       aria-label={label}
       tabIndex={0}

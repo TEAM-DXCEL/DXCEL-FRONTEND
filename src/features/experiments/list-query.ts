@@ -26,11 +26,9 @@ export function experimentStatus(item: ExperimentListItem): ExperimentStatus {
 export function readListQuery(params: URLSearchParams): ExperimentListQuery {
   const status = params.get("status") ?? "all";
   const sort = params.get("sort");
-  const page = Number(params.get("page"));
   return {
     search: params.get("q") ?? "",
     status: Object.hasOwn(statusLabels, status) ? (status as ExperimentStatus) : "all",
     sort: sortOptions.find((option) => option.value === sort)?.value ?? "updated_desc",
-    page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   };
 }

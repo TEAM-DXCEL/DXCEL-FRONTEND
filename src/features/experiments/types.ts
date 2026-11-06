@@ -74,13 +74,10 @@ export interface ExperimentListQuery {
   search: string;
   status: ExperimentStatus | "all";
   sort: ExperimentSort;
-  page: number;
 }
 
 export interface ExperimentListResult {
   items: readonly ExperimentListItem[];
   total: number;
-  page: number;
-  pageSize: number;
   source: "sample";
 }
