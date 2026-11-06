@@ -14,7 +14,6 @@ next-env.d.ts
 .superpowers/
 docs/superpowers/
 /docs/server-integration.md
-/AGENTS.md
 
 # Use pnpm exclusively
 package-lock.json
