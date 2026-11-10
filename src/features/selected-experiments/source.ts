@@ -1,7 +1,5 @@
 import "server-only";
 
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { cache } from "react";
 import { createResearchClient } from "@/features/recorded-comparison/supabase-archive";
 import type { RecordedMetricDefinition } from "@/features/recorded-comparison/model";
@@ -9,12 +7,7 @@ import type { RecordedStat } from "@/features/recorded-comparison/loader";
 
 import type { ExperimentListRow } from "@/features/experiments/types";
 
-type Evidence = { path: string; field?: string };
-type Observation = Record<string, string | number | boolean | null>;
-type SelectedExport = {
-  schema_version: number;
-  kind: string;
-  experiment_order: string[];
+type SelectedEvaluations = {
   experiments: {
     id: string;
     type: string;
@@ -58,37 +51,16 @@ type SelectedExport = {
     baseline_id: string;
     status: string;
   }[];
-  diagnostics: {
-    experiment_id: string;
-    limitation: string;
-    additional_limits: string[];
-    tables: { name: string; records: { observation: Observation; source: Evidence }[] }[];
-  }[];
 };
 
-export const loadSelectedExport = cache(async () => {
-  if (process.env.NODE_ENV !== "development") return null;
-  try {
-    const raw = await readFile(join(process.cwd(), ".local", "selected_experiments.json"), "utf8");
-    const data = JSON.parse(raw) as SelectedExport;
-    if (data.schema_version !== 1 || data.kind !== "selected_research_import_review_only") {
-      throw new Error("지원하지 않는 선정 실험 파일입니다.");
-    }
-    return data;
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
-    throw error;
-  }
-});
-
 type ArchivedExperiment = Pick<
-  SelectedExport,
+  SelectedEvaluations,
   | "metric_definitions"
   | "evaluation_groups"
   | "generation_runs"
   | "comparison_pairs"
   | "official_baseline_comparison_pairs"
-> & { experiment: SelectedExport["experiments"][number] };
+> & { experiment: SelectedEvaluations["experiments"][number] };
 
 const loadSelectedEvaluations = cache(async () => {
   const client = await createResearchClient();
@@ -181,7 +153,6 @@ export async function loadSelectedPerformance() {
   const runIds = groups.flatMap(({ condition }) => condition.runIds);
   if (new Set(runIds).size !== runIds.length) throw new Error("중복된 생성 실행이 있습니다.");
   return {
-    experimentCount: selectedIds.size,
     groups,
     metrics: data.metric_definitions.map((metric): RecordedMetricDefinition => ({
       key: metric.key,

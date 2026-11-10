@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { controlClasses, controlSizes } from "@/components/ui/field";
+import { cx } from "@/lib/cx";
+import { Select, selectOptionClasses, selectPanelClasses } from "@/components/ui/select";
 import { ThemeScope } from "@/components/ui/theme-scope";
 import styles from "@/features/comparison/comparison.module.css";
 import type { RecordedBaseline } from "@/features/recorded-comparison/baseline-loader";
@@ -64,13 +66,9 @@ export function SelectedPerformanceView({
     <ThemeScope theme="light" className="mb-section-gap">
       <section id="selected-performance" className={`${styles.recordedPanel} scroll-mt-header`}>
         <h2 className="text-heading-sm">선정 실험 성능 비교</h2>
-        <p className="text-body text-foreground-muted">
-          성능 실험 {data.experimentCount}개 · {data.groups.length}개 그룹 ·{" "}
-          {Object.keys(data.runs).length}개 실행
-        </p>
         <div className="my-control-inset grid gap-control-inset desktop:grid-cols-2">
           <Select
-            label="선정 실험 데이터셋"
+            label="데이터셋"
             value={dataset}
             options={datasetOptions}
             onValueChange={(value) => {
@@ -80,61 +78,102 @@ export function SelectedPerformanceView({
               setBaselineId("");
             }}
           />
-          <details
-            key={dataset}
-            className="relative min-w-0 self-start rounded-control border-thin border-border"
-          >
-            <summary className="min-h-control-sm cursor-pointer rounded-control px-control-inset py-1.5 text-label hover:bg-surface-hover focus-visible:bg-surface-hover">
-              비교할 실험 조건 · {selected.length}개 선택
-            </summary>
-            <div className="absolute inset-x-0 top-full z-(--z-popover) mt-select-sheet-gap grid max-h-table-region-max gap-control-inset overflow-y-auto rounded-card border-thin border-border bg-surface p-control-inset shadow-dropdown">
-              {Array.from(conditionOptions, ([experimentId, options]) => (
-                <fieldset key={experimentId} className="grid gap-1">
-                  <legend className="mb-1 text-label">{experimentId}</legend>
-                  {options.map(({ id, condition }) => (
-                    <label
-                      key={id}
-                      className="flex cursor-pointer items-center gap-control-gap rounded-control p-1 text-meta hover:bg-surface-hover"
-                    >
-                      <input
-                        type="checkbox"
-                        aria-label={`${experimentId} · ${condition}`}
-                        checked={selectedIds.includes(id)}
-                        onChange={({ currentTarget }) => {
-                          const checked = currentTarget.checked;
-                          setSelectedIds((ids) =>
-                            checked ? [...ids, id] : ids.filter((value) => value !== id),
-                          );
-                        }}
-                      />
-                      {condition}
-                    </label>
-                  ))}
-                </fieldset>
-              ))}
-              <div className="flex flex-wrap gap-control-gap">
-                <Button
-                  variant="ghost"
-                  controlSize="sm"
-                  disabled={selected.length === conditions.length}
-                  onClick={() => setSelectedIds(conditions.map(({ id }) => id))}
+          <div className="grid min-w-0 content-start gap-control-gap">
+            <span className="text-label">비교할 실험 조건</span>
+            <details key={dataset} className="group relative min-w-0">
+              <summary
+                aria-label={`비교할 실험 조건 · ${selected.length}개 선택`}
+                className={cx(
+                  controlClasses,
+                  controlSizes.md,
+                  "flex cursor-pointer list-none items-center justify-between gap-control-gap text-left group-open:bg-control-focus [&::-webkit-details-marker]:hidden",
+                )}
+              >
+                {selected.length}개 선택
+                <svg
+                  className="size-icon-sm shrink-0 text-foreground-subtle"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
                 >
-                  전체 선택
-                </Button>
-                <Button
-                  variant="ghost"
-                  controlSize="sm"
-                  disabled={selected.length === 0}
-                  onClick={() => setSelectedIds([])}
-                >
-                  전체 해제
-                </Button>
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <div
+                className={cx(
+                  selectPanelClasses,
+                  "absolute inset-x-0 top-full mt-select-sheet-gap max-h-select-list-max space-y-select-item-gap overflow-y-auto p-select-inset",
+                )}
+              >
+                <div className="flex flex-wrap gap-control-gap">
+                  <Button
+                    variant="ghost"
+                    controlSize="sm"
+                    disabled={selected.length === conditions.length}
+                    onClick={() => setSelectedIds(conditions.map(({ id }) => id))}
+                  >
+                    전체 선택
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    controlSize="sm"
+                    disabled={selected.length === 0}
+                    onClick={() => setSelectedIds([])}
+                  >
+                    전체 해제
+                  </Button>
+                </div>
+                {Array.from(conditionOptions, ([experimentId, options]) => (
+                  <fieldset key={experimentId} className="min-w-0 space-y-select-item-gap">
+                    <legend className="px-control-inset pt-1 text-label text-foreground-muted">
+                      {experimentId}
+                    </legend>
+                    {options.map(({ id, condition }) => (
+                      <label
+                        key={id}
+                        data-selected={selectedIds.includes(id)}
+                        className={cx(
+                          selectOptionClasses,
+                          "relative cursor-pointer hover:bg-control-focus has-[:focus-visible]:bg-control-focus data-[selected=true]:bg-select-selected data-[selected=true]:text-select-selected-foreground",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          aria-label={`${experimentId} · ${condition}`}
+                          checked={selectedIds.includes(id)}
+                          onChange={({ currentTarget }) => {
+                            const checked = currentTarget.checked;
+                            setSelectedIds((ids) =>
+                              checked ? [...ids, id] : ids.filter((value) => value !== id),
+                            );
+                          }}
+                        />
+                        <span className="min-w-0 wrap-anywhere">{condition}</span>
+                        {selectedIds.includes(id) && (
+                          <svg
+                            className="size-icon-sm shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            aria-hidden="true"
+                          >
+                            <path d="m5 12 4 4L19 6" />
+                          </svg>
+                        )}
+                      </label>
+                    ))}
+                  </fieldset>
+                ))}
               </div>
-            </div>
-          </details>
+            </details>
+          </div>
           {baselineOptions.length > 0 && (
             <Select
-              label="기존 Baseline"
+              label="Baseline"
               value={baseline?.id}
               onValueChange={setBaselineId}
               options={baselineOptions.map((entry) => ({
@@ -241,10 +280,9 @@ export function SelectedPerformanceView({
           </details>
         ))}
         <details className="mt-control-inset rounded-control border-thin border-border p-control-inset">
-          <summary className="cursor-pointer text-label">비교 조건 · 조건 제한 있음</summary>
+          <summary className="cursor-pointer text-label">비교 조건과 근거</summary>
           <p className="text-meta text-foreground-muted">
-            원본에 기록된 비교쌍입니다. EXP-135-context는 비교 근거로 표시됩니다. 평균 차이의 통계적
-            유의성은 미평가입니다.
+            EXP-135는 비교 근거입니다. 통계적 유의성은 미평가입니다.
           </p>
           <pre className="overflow-auto text-caption">
             {JSON.stringify({ 실험_비교: pairEvidence, Baseline_비교: baselineEvidence }, null, 2)}

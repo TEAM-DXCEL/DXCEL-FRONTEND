@@ -23,29 +23,25 @@ export function DashboardSidebar() {
         className="min-h-0 flex-1 overflow-y-auto px-2 py-panel-gap desktop:px-3"
       >
         <ul className="flex flex-col gap-2">
-          {dashboardNavigation
-            .filter(
-              (item) => item.href !== "/diagnostics" || process.env.NODE_ENV === "development",
-            )
-            .map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={active?.href === item.href ? "page" : undefined}
-                  aria-label={item.label}
-                  title={item.label}
-                  className={cx(
-                    "flex min-h-control-lg items-center justify-center gap-control-inset rounded-control px-control-inset text-body font-medium outline-none transition-colors duration-(--duration-fast) hover:bg-surface-hover focus-visible:bg-surface-hover desktop:justify-start",
-                    active?.href === item.href
-                      ? "bg-primary-subtle text-primary-text"
-                      : "text-foreground-muted",
-                  )}
-                >
-                  <NavigationIcon name={item.icon} />
-                  <span className="hidden desktop:inline">{item.label}</span>
-                </Link>
-              </li>
-            ))}
+          {dashboardNavigation.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={active?.href === item.href ? "page" : undefined}
+                aria-label={item.label}
+                title={item.label}
+                className={cx(
+                  "flex min-h-control-lg items-center justify-center gap-control-inset rounded-control px-control-inset text-body font-medium outline-none transition-colors duration-(--duration-fast) hover:bg-surface-hover focus-visible:bg-surface-hover desktop:justify-start",
+                  active?.href === item.href
+                    ? "bg-primary-subtle text-primary-text"
+                    : "text-foreground-muted",
+                )}
+              >
+                <NavigationIcon name={item.icon} />
+                <span className="hidden desktop:inline">{item.label}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
       {process.env.NODE_ENV === "development" && (

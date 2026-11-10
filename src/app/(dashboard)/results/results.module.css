@@ -1,0 +1,66 @@
+.scroll {
+  position: relative;
+  max-height: var(--spacing-table-region-max);
+  overflow: auto;
+  border: var(--border-width-default) solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-caption);
+  text-align: left;
+}
+
+.table :is(th, td) {
+  min-width: 9rem;
+  padding: var(--spacing-table-cell-y-compact) var(--spacing-control-inset);
+  border-bottom: var(--border-width-default) solid var(--border);
+  vertical-align: top;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: calc(var(--z-base) + 1);
+  background: var(--surface-muted);
+  overflow-wrap: anywhere;
+}
+
+.table th:first-child {
+  position: sticky;
+  left: 0;
+  min-width: 10rem;
+  border-right: var(--border-width-default) solid var(--border);
+}
+
+.table thead th:first-child {
+  z-index: calc(var(--z-base) + 2);
+}
+
+.table tbody th {
+  z-index: var(--z-base);
+  background: var(--surface);
+}
+
+.table td {
+  text-align: right;
+}
+
+.table [data-baseline="true"] {
+  background: var(--surface-muted);
+}
+
+.table [data-reference="true"] {
+  background: var(--primary-subtle);
+}
+
+.table tbody tr:hover > :not([data-reference="true"]) {
+  background: var(--surface-hover);
+}
+
+.table tbody [data-axis-start="true"] > * {
+  border-top: var(--border-width-default) solid var(--border-strong);
+}

@@ -199,7 +199,7 @@ export function RecordedMultiAxisView({
                     <div>
                       <dt className="text-caption text-foreground-muted">Baseline</dt>
                       <dd
-                        className="font-mono text-body font-semibold tabular-nums"
+                        className="font-mono text-body-lg font-semibold tabular-nums"
                         title={rawValue(reference)}
                       >
                         {previewValue(reference)}
@@ -208,7 +208,7 @@ export function RecordedMultiAxisView({
                     <div>
                       <dt className="text-caption text-chart-3">선택 실험</dt>
                       <dd
-                        className="font-mono text-body font-semibold text-chart-3 tabular-nums"
+                        className="font-mono text-body-lg font-semibold text-chart-3 tabular-nums"
                         title={rawValue(current)}
                       >
                         {previewValue(current)}
@@ -295,7 +295,9 @@ export function RecordedMultiAxisView({
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,28rem),1fr))] gap-control-inset">
             {(["radar", "parallel"] as const).map((mode) => (
               <section key={mode} className={styles.recordedPlotCard}>
-                <h3 className="text-label">{mode === "radar" ? "삼각형 레이더" : "평행좌표"}</h3>
+                <h3 className="text-heading-sm">
+                  {mode === "radar" ? "삼각형 레이더" : "평행좌표"}
+                </h3>
                 <div className="overflow-x-auto">
                   <div className="mx-auto min-w-[26rem] max-w-[48rem]">
                     <AxisComparisonPlot
@@ -315,8 +317,7 @@ export function RecordedMultiAxisView({
             ))}
           </div>
           <p className="text-caption text-foreground-muted">
-            점선 Baseline · 파란 실선 강조 실험 · 빈 원 목표값 · 초록 개선 · 빨강 저하 · 회색 판정
-            보류 또는 동률
+            점선 Baseline · 파랑 강조 실험 · 빈 원 목표값 · 초록 개선 · 빨강 저하 · 회색 보류/동률
           </p>
           <div className={styles.recordedChartTools}>
             <details className="text-meta">
@@ -341,9 +342,7 @@ export function RecordedMultiAxisView({
             </details>
             {series.length > 0 && (
               <details className="text-meta">
-                <summary className="mb-control-gap cursor-pointer text-label">
-                  세 축의 원점수 표 보기
-                </summary>
+                <summary className="mb-control-gap cursor-pointer text-label">원점수 표</summary>
                 <TableViewport label="다축 비교 원점수">
                   <table className={styles.archiveTable}>
                     <thead>

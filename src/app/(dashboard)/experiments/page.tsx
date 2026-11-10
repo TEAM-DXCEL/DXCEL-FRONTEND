@@ -36,11 +36,6 @@ export default async function ExperimentsPage() {
               <Link className="text-link underline" href="/compare#selected-performance">
                 선정 실험 비교
               </Link>
-              {process.env.NODE_ENV === "development" && (
-                <Link className="text-link underline" href="/diagnostics">
-                  EXP-119·120 진단
-                </Link>
-              )}
             </nav>
           )}
           <ExperimentList rows={result.status === "disabled" ? undefined : rows} />
