@@ -44,7 +44,7 @@
 
 ## Supabase 평가 결과 확인
 
-개발 모드의 Overview, 실험 목록, 비교 화면은 Supabase Storage의 비공개 `dxcel-research-archive` 버킷에서 EXP-125·127 기록을 읽는다. EXP-143은 비교 화면과 실험 목록에서 Supabase DB의 등록 실행을 조회한다. 개발 서버는 Git에서 제외된 `.env.development.local`의 `DXCEL_COMPARISON_SUPABASE_URL`, `DXCEL_COMPARISON_SUPABASE_SECRET_KEY`, `DXCEL_COMPARISON_RUN_ID` 설정을 사용한다. 정적 빌드는 샘플 또는 안내를 표시한다.
+개발 모드의 Overview, 실험 목록, 비교 화면은 Supabase Storage의 비공개 `dxcel-research-archive` 버킷에서 EXP-125·127 기록을 읽는다. EXP-143은 비교 화면과 실험 목록에서 Supabase DB의 등록 실행을 조회한다. 개발 서버는 Git에서 제외된 `.env.development.local`의 `DXCEL_COMPARISON_SUPABASE_URL`, `DXCEL_COMPARISON_SUPABASE_SECRET_KEY`, `DXCEL_COMPARISON_RUN_ID` 설정을 사용한다. 팀 공유 서버도 같은 조회 설정을 사용하며, 공용 비밀번호를 확인한 요청에서만 실제 데이터를 읽는다.
 
 비교표는 실험마다 한 줄을 표시한다. 실험을 펼치면 Phase와 데이터셋별 조건이 나오며, 비교 지표 하나를 표와 그래프에 함께 적용한다. 요약은 실험 ID, Phase, 데이터셋, 원본 조건 이름, 지표 키로 연결한다. 원본 요약을 우선 표시하고, 요약이 없는 지표는 측정된 생성 실행에서 평균과 표본 표준편차를 계산한다. 재사용 결과는 원래 생성 실행으로 연결하며 재사용한 실험의 신규 실행 수에 포함하지 않는다.
 
