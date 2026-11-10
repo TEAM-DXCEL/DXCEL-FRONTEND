@@ -90,9 +90,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 17rem;
 }
-.tradeoffPanel {
+:is(.tradeoffPanel, .primaryChart) {
   --comparison-point-better: var(--color-green-500);
   --comparison-point-worse: var(--color-red-500);
+}
+.tradeoffPanel {
   min-width: 0;
   padding: var(--spacing-card-inset);
 }
@@ -1239,4 +1241,91 @@
 .missingValue {
   color: var(--foreground-muted);
   font-size: var(--text-meta);
+}
+
+.baselineCatalogTable {
+  min-width: 44rem;
+  table-layout: fixed;
+}
+.baselineCatalogTable th,
+.baselineCatalogTable td {
+  padding-block: var(--spacing);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.recordedPanels {
+  display: grid;
+  gap: var(--spacing-panel-gap);
+}
+.recordedPanel {
+  min-width: 0;
+  padding: var(--spacing-card-inset);
+  border: var(--border-width-default) solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--foreground);
+}
+.recordedAxisStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--spacing-control-inset);
+}
+.recordedPlotCard {
+  min-width: 0;
+  padding: var(--spacing-control-inset);
+  border: var(--border-width-default) solid var(--border);
+  border-radius: var(--radius-control);
+}
+.recordedPlotCard .primaryChart {
+  margin-top: var(--spacing-control-gap);
+}
+.recordedChartTools {
+  display: grid;
+  gap: var(--spacing-control-gap);
+  padding-top: var(--spacing-control-gap);
+  border-top: var(--border-width-default) solid var(--border);
+}
+
+.recordedBaselineCell {
+  display: block;
+  width: 100%;
+  padding-inline: var(--spacing-control-gap);
+  border-radius: var(--radius-control);
+  text-align: left;
+  cursor: pointer;
+}
+.recordedBaselineCell:hover,
+.recordedBaselineCell:focus-visible {
+  background: var(--surface-hover);
+}
+.recordedBaselineCell[aria-pressed="true"] {
+  background: var(--surface-muted);
+}
+.recordedReferenceTag {
+  display: inline-block;
+  padding-inline: var(--spacing-control-gap);
+  border-radius: var(--radius-badge);
+  background: var(--surface-muted);
+  color: var(--foreground-muted);
+  font: var(--text-caption) / var(--text-caption--line-height) var(--font-sans);
+}
+
+.recordedAxisCard {
+  min-width: 0;
+  padding: var(--spacing-control-inset);
+  border: var(--border-width-default) solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+}
+.recordedSeriesTag {
+  display: inline-block;
+  padding: var(--spacing) var(--spacing-control-gap);
+  border-radius: var(--radius-badge);
+  background: var(--info-subtle);
+  color: var(--chart-3);
+}
+.recordedSeriesTag[data-baseline="true"] {
+  background: var(--surface-muted);
+  color: var(--chart-baseline);
 }
