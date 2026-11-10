@@ -6,9 +6,23 @@ import { loadRecordedDashboard } from "@/features/recorded-comparison/loader";
 import { loadBaselineCatalog } from "@/features/recorded-comparison/baseline-loader";
 import { loadSupabaseComparisonRun } from "@/features/recorded-comparison/supabase-run";
 
+import { SelectedPerformanceView } from "@/features/selected-experiments/performance";
+import { loadSelectedPerformance } from "@/features/selected-experiments/source";
+
 export const metadata = { title: "비교 | DXCEL" };
 
 export default async function ComparePage() {
+  const selected = await loadSelectedPerformance();
+  if (selected) {
+    const catalog = await loadBaselineCatalog();
+    return (
+      <SelectedPerformanceView
+        data={selected}
+        baselines={catalog.status === "ready" ? catalog.data.baselines : []}
+      />
+    );
+  }
+
   const [result, live] = await Promise.all([
     loadRecordedDashboard(),
     loadSupabaseComparisonRun()
@@ -16,7 +30,7 @@ export default async function ComparePage() {
       .catch(() => ({ run: null, error: true })),
   ]);
   if (result.status === "disabled") return <ComparisonDashboard />;
-  if (result.status === "ready")
+  if (result.status === "ready") {
     return (
       <RecordedComparisonDashboard
         data={result.data}
@@ -25,6 +39,7 @@ export default async function ComparePage() {
         liveError={live.error}
       />
     );
+  }
 
   if (live.run) {
     return (

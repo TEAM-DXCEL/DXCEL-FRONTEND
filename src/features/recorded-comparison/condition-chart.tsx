@@ -31,7 +31,13 @@ export function ConditionChart({
 }: {
   conditions: readonly ComparisonCondition[];
   metric: RecordedMetricDefinition | undefined;
-  runs: RecordedDataset["runs"];
+  runs: Record<
+    string,
+    {
+      source_run_id: RecordedDataset["runs"][string]["source_run_id"];
+      metrics: readonly Pick<RecordedDataset["runs"][string]["metrics"][number], "key" | "value">[];
+    }
+  >;
   baseline: RecordedBaseline | undefined;
 }) {
   const [scale, setScale] = useState<"zoom" | "zero">("zoom");
