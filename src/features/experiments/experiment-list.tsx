@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/select";
 import { ExperimentTable } from "./experiment-table";
 import { readListQuery, sortOptions, statusLabels } from "./list-query";
 import { listExperiments } from "./repository";
-import type { ExperimentListResult } from "./types";
+import type { ExperimentListResult, ExperimentListRow } from "./types";
 
 type LoadState =
   { key: string; state: "ready"; result: ExperimentListResult } | { key: string; state: "error" };
@@ -24,7 +24,7 @@ export function ExperimentListLoading() {
   );
 }
 
-export function ExperimentList() {
+export function ExperimentList({ rows }: { rows?: readonly ExperimentListRow[] }) {
   const searchParams = useSearchParams();
   const query = readListQuery(new URLSearchParams(searchParams.toString()));
   const [retry, setRetry] = useState(0);
@@ -34,7 +34,7 @@ export function ExperimentList() {
   useEffect(() => {
     const controller = new AbortController();
     const [requestQuery] = JSON.parse(key) as [typeof query, number];
-    listExperiments(requestQuery, controller.signal).then(
+    listExperiments(requestQuery, controller.signal, rows).then(
       (result) => {
         if (!controller.signal.aborted) setLoaded({ key, state: "ready", result });
       },
@@ -43,7 +43,7 @@ export function ExperimentList() {
       },
     );
     return () => controller.abort();
-  }, [key]);
+  }, [key, rows]);
 
   function updateQuery(values: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -76,10 +76,12 @@ export function ExperimentList() {
       <CardHeader>
         <div className="flex flex-wrap items-center gap-control-gap">
           <CardTitle>실험 기록</CardTitle>
-          <Badge tone="warning">샘플 데이터</Badge>
+          <Badge tone={rows ? "neutral" : "warning"}>
+            {rows ? "Supabase · 실험 결과" : "샘플 데이터"}
+          </Badge>
         </div>
         <CardDescription>
-          화면 확인용 가상 기록입니다. 실제 연구 데이터는 연결되지 않았습니다.
+          {rows ? "원본에 기록된 실험과 생성 실행을 표시합니다." : "화면 확인용 가상 기록입니다."}
         </CardDescription>
       </CardHeader>
       <div className="flex flex-wrap items-end gap-control-inset">
@@ -90,7 +92,7 @@ export function ExperimentList() {
             type="search"
             label="실험 검색"
             defaultValue={query.search}
-            placeholder="번호, 제목, 담당자, 변경 이유"
+            placeholder={rows ? "번호, 제목, 담당자, 실험 목적" : "번호, 제목, 담당자, 변경 이유"}
             fieldClassName="w-search max-w-full"
           />
           <Button type="submit" variant="secondary">
@@ -98,7 +100,7 @@ export function ExperimentList() {
           </Button>
         </form>
         <Select
-          label="최신 실행 상태"
+          label={rows ? "최신 생성 상태" : "최신 실행 상태"}
           value={query.status}
           onValueChange={(status) => updateQuery({ status })}
           options={[
@@ -136,11 +138,13 @@ export function ExperimentList() {
         {result && (
           <div className="flex flex-col gap-control-inset">
             <p role="status" className="text-meta text-foreground-muted">
-              {hasFilters ? "검색 결과" : "전체"} {result.total}개 · 최신 실행 상태는 실험의 최종
-              평가를 의미하지 않습니다.
+              {hasFilters ? "검색 결과" : "전체"} {result.total}개 ·{" "}
+              {rows
+                ? "최신 생성 상태는 생성 실행 기록 기준입니다."
+                : "최신 실행 상태는 실험의 최종 평가를 의미하지 않습니다."}
             </p>
             {result.items.length ? (
-              <InfiniteExperimentResults key={key} result={result} />
+              <InfiniteExperimentResults key={key} result={result} recorded={Boolean(rows)} />
             ) : (
               <div className="flex flex-col items-center gap-control-inset rounded-card border-thin border-border py-section-gap text-center">
                 <p className="text-label">
@@ -166,7 +170,13 @@ export function ExperimentList() {
   );
 }
 
-function InfiniteExperimentResults({ result }: { result: ExperimentListResult }) {
+function InfiniteExperimentResults({
+  result,
+  recorded,
+}: {
+  result: ExperimentListResult;
+  recorded: boolean;
+}) {
   const { rootRef, sentinelRef, limit, hasMore, loadMoreWithFocus } = useInfiniteWindow(
     result.items.length,
   );
@@ -177,6 +187,7 @@ function InfiniteExperimentResults({ result }: { result: ExperimentListResult })
       </p>
       <ExperimentTable
         items={result.items.slice(0, limit)}
+        recorded={recorded}
         viewportRef={rootRef}
         footer={
           <div

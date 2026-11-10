@@ -1,5 +1,5 @@
 export type RunStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
-export type ExperimentStatus = RunStatus | "not_started";
+export type ExperimentStatus = RunStatus | "not_started" | "unknown";
 
 export interface Experiment {
   id: string;
@@ -76,8 +76,23 @@ export interface ExperimentListQuery {
   sort: ExperimentSort;
 }
 
+export interface ExperimentListRow {
+  id: string;
+  code: string;
+  number: number;
+  title: string;
+  owner: string | null;
+  updatedAt: string | null;
+  status: ExperimentStatus;
+  runCount: number;
+  reusedCount: number | null;
+  version: number | null;
+  changes: string | null;
+  searchNote: string;
+  details: readonly (readonly [string, string | null])[];
+}
+
 export interface ExperimentListResult {
-  items: readonly ExperimentListItem[];
+  items: readonly ExperimentListRow[];
   total: number;
-  source: "sample";
 }

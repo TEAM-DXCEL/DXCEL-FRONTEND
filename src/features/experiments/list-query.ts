@@ -1,7 +1,8 @@
-import type { ExperimentListQuery, ExperimentListItem, ExperimentStatus } from "./types";
+import type { ExperimentListQuery, ExperimentStatus } from "./types";
 
 export const statusLabels = {
   not_started: "실행 전",
+  unknown: "미확인",
   queued: "대기",
   running: "실행 중",
   succeeded: "성공",
@@ -17,10 +18,6 @@ export const sortOptions = [
 
 export function experimentCode(number: number) {
   return `EXP-${String(number).padStart(3, "0")}`;
-}
-
-export function experimentStatus(item: ExperimentListItem): ExperimentStatus {
-  return item.latestRun?.status ?? "not_started";
 }
 
 export function readListQuery(params: URLSearchParams): ExperimentListQuery {
