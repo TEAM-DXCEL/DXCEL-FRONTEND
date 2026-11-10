@@ -46,7 +46,7 @@ type ComparisonRunResponse = {
 
 export async function loadSupabaseComparisonRun() {
   const id = process.env.DXCEL_COMPARISON_RUN_ID;
-  const supabase = createResearchClient();
+  const supabase = await createResearchClient();
   if (!supabase || !id) return null;
 
   const { data: response, error } = await supabase

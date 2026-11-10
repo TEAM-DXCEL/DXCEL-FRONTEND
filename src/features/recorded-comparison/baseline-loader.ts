@@ -346,7 +346,9 @@ export type RecordedBaseline = BaselineCatalog["baselines"][number];
 export type BaselineStat = RecordedBaseline["metrics"][string];
 
 export async function loadBaselineCatalog(context?: ExperimentContext) {
-  if (process.env.NODE_ENV !== "development") return { status: "disabled" } as const;
+  if (process.env.NODE_ENV === "production" && !process.env.DXCEL_TEAM_PASSWORD) {
+    return { status: "disabled" } as const;
+  }
   try {
     const archive = await readResearchArchive("dashboard-baselines.json.gz");
     if (archive === null) return { status: "missing" } as const;

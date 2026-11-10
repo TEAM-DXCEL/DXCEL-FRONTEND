@@ -3,11 +3,13 @@ import "server-only";
 import { promisify } from "node:util";
 import { gunzip } from "node:zlib";
 import { createClient } from "@supabase/supabase-js";
+import { headers } from "next/headers";
+import { teamAccess } from "@/lib/team-access";
 
 const decompress = promisify(gunzip);
 
-export function createResearchClient() {
-  if (process.env.NODE_ENV !== "development") return null;
+export async function createResearchClient() {
+  if (teamAccess((await headers()).get("authorization")) !== "allowed") return null;
   const url = process.env.DXCEL_COMPARISON_SUPABASE_URL;
   const key = process.env.DXCEL_COMPARISON_SUPABASE_SECRET_KEY;
   if (!url || !key) return null;
@@ -19,7 +21,7 @@ export function createResearchClient() {
 export async function readResearchArchive(
   object: "dashboard.json.gz" | "dashboard-baselines.json.gz",
 ) {
-  const client = createResearchClient();
+  const client = await createResearchClient();
   if (!client) return null;
 
   const { data, error } = await client.storage
