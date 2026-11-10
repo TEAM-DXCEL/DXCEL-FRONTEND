@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: frontend-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/develop' }}
 
 jobs:
   check:
@@ -32,3 +32,31 @@ jobs:
       - run: pnpm build
       - name: Verify server build
         run: test -s .next/BUILD_ID
+
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Deploy to Vercel production
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          : "${VERCEL_TOKEN:?Missing VERCEL_TOKEN repository secret}"
+          : "${VERCEL_ORG_ID:?Missing VERCEL_ORG_ID repository secret}"
+          : "${VERCEL_PROJECT_ID:?Missing VERCEL_PROJECT_ID repository secret}"
+          release_dir="$(mktemp -d)"
+          git archive "$GITHUB_SHA" | tar -x -C "$release_dir"
+          cd "$release_dir"
+          npx --yes vercel@65.14.0 deploy --prod --yes --token "$VERCEL_TOKEN" \
+            --meta "gitCommitRef=$GITHUB_REF_NAME" --meta "gitCommitSha=$GITHUB_SHA"
