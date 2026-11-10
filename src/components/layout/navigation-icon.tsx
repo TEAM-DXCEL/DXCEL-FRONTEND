@@ -30,6 +30,12 @@ export function NavigationIcon({ name }: { name: NavigationIconName }) {
           <path d="M4 20V10M12 20V4M20 20v-7M2 20h20" />
         </>
       )}
+      {name === "results" && (
+        <>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 9h18M3 14h18M10 9v11" />
+        </>
+      )}
       {name === "baseline" && (
         <>
           <path d="M5 21V3m0 1h14l-3 5 3 5H5" />
