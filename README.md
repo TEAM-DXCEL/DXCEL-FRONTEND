@@ -19,7 +19,7 @@ pnpm dev
 백엔드가 실행되면 `.env.local`에 로컬 publishable/anon key를 입력합니다.
 관리자 키와 수집 token은 `NEXT_PUBLIC_*`에 넣지 않습니다.
 
-## 검사와 정적 빌드
+## 팀 공유 서버
 
 ```bash
 pnpm check
@@ -27,21 +27,22 @@ pnpm build
 pnpm preview
 ```
 
-- `check`: 포맷·ESLint·TypeScript 검사
-- `format`: 소스와 개발 설정 포맷
-- `build`: Cloudflare Pages용 `out/` 정적 파일 생성
-- `preview`: 빌드 결과를 로컬 3000 포트에서 확인. 개발 프로세스와 동시에 사용하지 않습니다.
+배포 호스트의 서버 환경 변수에 다음 값을 설정합니다.
 
-`output: "export"`를 사용하므로 `next start`, 런타임 API Route, Server Actions를 사용하지 않습니다.
-비공개 연구 데이터는 빌드 산출물에 포함하지 않습니다. 외부 폰트 다운로드 없이 빌드됩니다.
-Cloudflare Pages 연결 시 build command는 `pnpm build`, output directory는 `out`,
-`NODE_VERSION`은 `.nvmrc`와 동일하게 설정합니다. 아직 호스팅 프로젝트는 생성하지 않았습니다.
+| 변수                                   | 값                                   |
+| -------------------------------------- | ------------------------------------ |
+| `DXCEL_TEAM_PASSWORD`                  | 팀 공용 비밀번호                     |
+| `DXCEL_COMPARISON_SUPABASE_URL`        | 연구 기록이 있는 Supabase URL        |
+| `DXCEL_COMPARISON_SUPABASE_SECRET_KEY` | Supabase 서버용 비밀 키              |
+| `DXCEL_COMPARISON_RUN_ID`              | 실험 목록·비교에 표시할 등록 실행 ID |
+
+HTTPS 배포 주소를 열면 브라우저에서 사용자 이름 `team`과 공용 비밀번호를 입력합니다. 로컬에서 같은 방식으로 확인하려면 위 변수를 설정한 뒤 `pnpm preview`를 실행합니다. 기본 포트는 3000이므로 개발 서버와 동시에 사용하려면 다른 포트를 지정합니다.
 
 ## 작업 규칙
 
 - 기능·수정·개발 도구·문서 변경을 목적별 커밋으로 나눕니다.
 - 커밋 메시지는 `feat:`, `fix:`, `chore:`, `docs:`, `ci:` 형식을 사용합니다.
-- 커밋 전 `pnpm check`, 정적 경로/설정 변경 시 `pnpm build`를 실행합니다.
+- 커밋 전 `pnpm check`, 서버 경로/설정 변경 시 `pnpm build`를 실행합니다.
 - 단순 UI·스타일·props 전달 및 구현을 그대로 반복하는 로직 테스트는 추가하지 않습니다. 포맷·린트·타입 검사와 빌드 검증은 유지합니다.
 - `.env.local`, `node_modules/`, `.next/`, `out/`은 Git에서 제외합니다.
 - 기존 설계 문서는 자동 포맷 대상에서 제외해 설계 내용과 코드 스타일 변경을 분리합니다.
@@ -63,5 +64,3 @@ PR과 main/develop/작업 브랜치 push에 CI가 실행됩니다.
 - [컬러 토큰과 사용 규칙](docs/color-tokens.md)
 - [전체 구조·페이지·무료 배포 설계 초안](docs/architecture.md)
 - DB·수집 API 계약은 `TEAM-DXCEL/DXCEL-BACKEND`의 `docs/database-design.md`에서 관리합니다.
-
-현재는 개발 기반·공통 UI·데스크톱 레이아웃과 샘플 기반 실험 목록이 있습니다. 로그인·실제 데이터 조회·비교 기능은 후속 구현 범위입니다.

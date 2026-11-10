@@ -457,7 +457,9 @@ export type RecordedRun = RecordedDataset["runs"][string];
 export type RecordedStat = RecordedCondition["metrics"][string];
 
 export async function loadRecordedDashboard() {
-  if (process.env.NODE_ENV !== "development") return { status: "disabled" } as const;
+  if (process.env.NODE_ENV === "production" && !process.env.DXCEL_TEAM_PASSWORD) {
+    return { status: "disabled" } as const;
+  }
   try {
     const archive = await readResearchArchive("dashboard.json.gz");
     if (archive === null) return { status: "missing" } as const;
