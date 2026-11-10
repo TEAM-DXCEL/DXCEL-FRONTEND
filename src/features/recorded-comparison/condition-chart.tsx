@@ -130,10 +130,7 @@ export function ConditionChart({
         </div>
       </div>
       <div className="grid gap-control-gap text-caption text-foreground-muted">
-        <p>
-          {zoomed ? "관측값 주변 확대 · 원점수" : "0을 포함한 원점수 범위"}
-          {target !== null && !targetVisible && ` · 목표값 ${rawValue(target)} (표시 범위 밖)`}
-        </p>
+        {target !== null && !targetVisible && <p>목표값 {rawValue(target)} · 표시 범위 밖</p>}
         {plotted.length > 0 && (
           <div className="px-control-inset" aria-label="공통 가로축 눈금">
             <div className="mx-[2.5%] flex justify-between gap-1 font-mono tabular-nums">

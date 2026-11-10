@@ -153,7 +153,6 @@ export async function loadSelectedPerformance() {
   const runIds = groups.flatMap(({ condition }) => condition.runIds);
   if (new Set(runIds).size !== runIds.length) throw new Error("중복된 생성 실행이 있습니다.");
   return {
-    experimentCount: selectedIds.size,
     groups,
     metrics: data.metric_definitions.map((metric): RecordedMetricDefinition => ({
       key: metric.key,

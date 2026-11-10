@@ -6,6 +6,11 @@ import { cx } from "../../lib/cx";
 import { Field, controlClasses, controlSizes, useFieldIds, type FieldProps } from "./field";
 import { useThemeScope } from "./theme-scope";
 
+export const selectOptionClasses =
+  "flex min-h-control-md items-center justify-between gap-control-gap rounded-control px-control-inset py-1 text-body outline-none select-none";
+export const selectPanelClasses =
+  "z-(--z-popover) overflow-hidden rounded-card border-thin border-border bg-surface text-foreground shadow-dropdown outline-none";
+
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 
 type TriggerProps = ComponentPropsWithRef<typeof SelectPrimitive.Trigger>;
@@ -102,7 +107,10 @@ export function Select({
             align="start"
             aria-label={ariaLabel ?? label}
             aria-labelledby={labelledBy}
-            className="z-(--z-popover) my-select-sheet-gap w-(--radix-select-trigger-width) overflow-hidden rounded-card border-thin border-border bg-surface text-foreground shadow-dropdown outline-none"
+            className={cx(
+              selectPanelClasses,
+              "my-select-sheet-gap w-(--radix-select-trigger-width)",
+            )}
           >
             <SelectPrimitive.Viewport className="max-h-[min(var(--spacing-select-list-max),max(0px,calc(var(--radix-select-content-available-height)-var(--spacing-select-sheet-gap)*2-var(--border-width-default)*2)))] space-y-select-item-gap p-select-inset">
               {options.map((option) => (
@@ -111,7 +119,10 @@ export function Select({
                   value={option.value}
                   disabled={option.disabled}
                   textValue={option.label}
-                  className="flex min-h-control-md cursor-default items-center justify-between gap-control-gap rounded-control px-control-inset py-1 text-body outline-none select-none data-[state=checked]:bg-select-selected data-[state=checked]:text-select-selected-foreground data-[highlighted]:bg-control-focus data-[disabled]:pointer-events-none data-[disabled]:text-disabled-foreground"
+                  className={cx(
+                    selectOptionClasses,
+                    "cursor-default data-[state=checked]:bg-select-selected data-[state=checked]:text-select-selected-foreground data-[highlighted]:bg-control-focus data-[disabled]:pointer-events-none data-[disabled]:text-disabled-foreground",
+                  )}
                 >
                   <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
                   <SelectPrimitive.ItemIndicator>
