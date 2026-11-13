@@ -65,16 +65,17 @@ export function previewValue(value: number | null) {
 }
 
 export function improvement(metric: RecordedMetricDefinition, current: number, reference: number) {
-  switch (metric.direction) {
-    case "higher":
-      return current - reference;
-    case "lower":
-      return reference - current;
-    case "closer_to_target": {
-      if (metric.target === null) return null;
-      return Math.abs(reference - metric.target) - Math.abs(current - metric.target);
-    }
-  }
+  if (metric.direction === "closer_to_target" && metric.target === null) return null;
+
+  const target = metric.target ?? 0;
+  const change =
+    metric.direction === "higher"
+      ? current - reference
+      : metric.direction === "lower"
+        ? reference - current
+        : Math.abs(reference - target) - Math.abs(current - target);
+  const scale = Math.max(Math.abs(current), Math.abs(reference), Math.abs(target));
+  return Math.abs(change) <= Number.EPSILON * scale * 4 ? 0 : change;
 }
 
 export function baselineDifference(
@@ -90,14 +91,7 @@ export function baselineDifference(
   )
     return null;
 
-  const change = improvement(metric, current.mean, baseline.mean);
-  if (change === null) return null;
-  const scale = Math.max(
-    Math.abs(current.mean),
-    Math.abs(baseline.mean),
-    Math.abs(metric.target ?? 0),
-  );
-  return Math.abs(change) <= Number.EPSILON * scale * 4 ? 0 : change;
+  return improvement(metric, current.mean, baseline.mean);
 }
 
 export function formatChange(change: number) {

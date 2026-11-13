@@ -86,7 +86,9 @@ export function Select({
             className,
           )}
         >
-          <SelectPrimitive.Value placeholder={placeholder} />
+          <span className="min-w-0 truncate">
+            <SelectPrimitive.Value placeholder={placeholder} />
+          </span>
           <SelectPrimitive.Icon asChild>
             <svg
               className="size-icon-sm shrink-0 text-foreground-subtle"
@@ -121,11 +123,11 @@ export function Select({
                   textValue={option.label}
                   className={cx(
                     selectOptionClasses,
-                    "cursor-default data-[state=checked]:bg-select-selected data-[state=checked]:text-select-selected-foreground data-[highlighted]:bg-control-focus data-[disabled]:pointer-events-none data-[disabled]:text-disabled-foreground",
+                    "cursor-default [&>:first-child]:min-w-0 [&>:first-child]:wrap-anywhere data-[state=checked]:bg-select-selected data-[state=checked]:text-select-selected-foreground data-[highlighted]:bg-control-focus data-[disabled]:pointer-events-none data-[disabled]:text-disabled-foreground",
                   )}
                 >
                   <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
-                  <SelectPrimitive.ItemIndicator>
+                  <SelectPrimitive.ItemIndicator className="shrink-0">
                     <svg
                       className="size-icon-sm shrink-0"
                       viewBox="0 0 24 24"

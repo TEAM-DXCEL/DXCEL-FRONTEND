@@ -1,0 +1,212 @@
+.matrixScroll {
+  position: relative;
+  overflow-x: auto;
+  isolation: isolate;
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+  padding: var(--spacing-control-gap);
+}
+
+.matrix {
+  width: 100%;
+  min-width: 69rem;
+  border-collapse: separate;
+  border-spacing: var(--spacing-control-inset);
+  text-align: center;
+  font-size: var(--text-label);
+}
+
+.matrix th {
+  padding: var(--spacing-control-gap);
+}
+
+.matrix tr > th:first-child:is([rowspan], [scope="row"]) {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface-muted);
+}
+
+.matrix tbody th {
+  width: 8rem;
+  text-align: left;
+  font-size: var(--text-heading-sm);
+}
+
+.matrix .category {
+  border-bottom: var(--border-width-default) solid var(--border-strong);
+  color: var(--primary-text);
+}
+
+.datasetToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-control-gap);
+  padding: 0.25rem var(--spacing-control-gap);
+  border: var(--border-width-default) solid var(--border);
+  border-radius: var(--radius-control);
+  font-size: var(--text-label);
+}
+
+.datasetToggle:has(:checked) {
+  background: var(--primary-subtle);
+  color: var(--primary-text);
+}
+
+.datasetToggle input {
+  accent-color: var(--primary-text);
+}
+
+.plot {
+  position: relative;
+  min-width: 9rem;
+  padding: 1.75rem 0.25rem 1.25rem;
+  border: var(--border-width-default) solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.plot[data-tone="better"] {
+  border-color: var(--color-green-600);
+  box-shadow: inset 0 0 0 calc(var(--border-width-emphasis) - var(--border-width-default))
+    var(--color-green-600);
+}
+
+.change {
+  position: absolute;
+  top: 0.25rem;
+  right: var(--spacing-control-gap);
+  font-weight: var(--font-weight-semibold);
+}
+
+.plot[data-tone="better"] .change {
+  color: var(--success);
+}
+
+.plot[data-tone="worse"] .change {
+  color: var(--danger);
+}
+
+.plotArea {
+  position: relative;
+  height: 7rem;
+}
+
+.aimLine,
+.targetLine {
+  position: absolute;
+  inset-inline: 0;
+  border-top: var(--border-width-default) dotted var(--foreground-muted);
+}
+
+.targetLine {
+  border-top-style: dashed;
+  border-color: var(--border-strong);
+  text-align: right;
+  font-size: var(--text-caption);
+  color: var(--foreground-muted);
+}
+
+.plotSeries {
+  position: absolute;
+  inset-block: 0;
+  width: 0;
+}
+
+:is(.seriesColor, .plotSeries)[data-series="aim"] {
+  color: var(--chart-baseline);
+}
+
+:is(.seriesColor, .plotSeries)[data-series="tabpe"] {
+  color: var(--chart-neutral);
+}
+
+:is(.seriesColor, .plotSeries)[data-series="privpgd"] {
+  color: var(--chart-3);
+}
+
+:is(.seriesColor, .plotSeries)[data-series="experiment"] {
+  color: var(--chart-2);
+}
+
+.errorBar,
+.point,
+.missingPoint {
+  position: absolute;
+  translate: -50% 0;
+}
+
+.errorBar {
+  width: 1px;
+  background: currentColor;
+}
+
+.errorBar::before,
+.errorBar::after {
+  position: absolute;
+  left: 50%;
+  width: 0.4rem;
+  border-top: 1px solid currentColor;
+  translate: -50% 0;
+  content: "";
+}
+
+.errorBar::after {
+  bottom: 0;
+}
+
+.point {
+  translate: -50% -50%;
+  line-height: 1;
+  cursor: help;
+}
+
+.pointValue {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  translate: -50% 0;
+  background: var(--surface);
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 1;
+  bottom: calc(100% + 0.75rem);
+  left: 0;
+  display: none;
+  width: 8rem;
+  padding: var(--spacing-control-gap);
+  border-radius: var(--radius-control);
+  background: var(--surface-inverse);
+  color: var(--foreground-inverse);
+  font-size: var(--text-caption);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.plotSeries:is([data-series="privpgd"], [data-series="experiment"]) .tooltip {
+  right: 0;
+  left: auto;
+}
+
+.point[data-tooltip-below="true"] .tooltip {
+  top: calc(100% + 0.25rem);
+  bottom: auto;
+}
+
+.point:is(:hover, :focus-visible) {
+  z-index: var(--z-sticky);
+}
+
+.point:is(:hover, :focus-visible) .tooltip {
+  display: block;
+}
+
+.missingPoint {
+  bottom: 0;
+  color: var(--foreground-muted);
+}

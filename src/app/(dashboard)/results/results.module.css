@@ -2,6 +2,7 @@
   position: relative;
   max-height: var(--spacing-table-region-max);
   overflow: auto;
+  isolation: isolate;
   border: var(--border-width-default) solid var(--border);
   border-radius: var(--radius-control);
 }

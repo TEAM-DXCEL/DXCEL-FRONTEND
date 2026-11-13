@@ -111,7 +111,7 @@ export function ConditionChart({
   const distinctTickLabels = new Set(tickLabels).size === ticks.length;
 
   return (
-    <div className="grid gap-control-inset">
+    <div className="grid min-w-0 grid-cols-1 gap-control-inset">
       <div className="flex flex-wrap items-center justify-between gap-control-gap text-meta text-foreground-muted">
         <div>
           <p>{directionLabel(metric)}</p>
@@ -129,13 +129,13 @@ export function ConditionChart({
           </button>
         </div>
       </div>
-      <div className="grid gap-control-gap text-caption text-foreground-muted">
+      <div className="grid min-w-0 grid-cols-1 gap-control-gap text-caption text-foreground-muted">
         {target !== null && !targetVisible && <p>목표값 {rawValue(target)} · 표시 범위 밖</p>}
         {plotted.length > 0 && (
           <div className="px-control-inset" aria-label="공통 가로축 눈금">
             <div className="mx-[2.5%] flex justify-between gap-1 font-mono tabular-nums">
               {ticks.map((tick, index) => (
-                <span key={index} title={rawValue(tick)}>
+                <span key={index} className="min-w-0 truncate" title={rawValue(tick)}>
                   {distinctTickLabels ? tickLabels[index] : rawValue(tick)}
                 </span>
               ))}
@@ -143,7 +143,7 @@ export function ConditionChart({
           </div>
         )}
       </div>
-      <div className="grid gap-control-inset">
+      <div className="grid min-w-0 grid-cols-1 gap-control-inset">
         {rows.map(({ id, name, stat, points, delta, isBaseline, note }) => {
           const average = stat?.mean ?? null;
           const seriesColor = isBaseline ? "var(--chart-baseline)" : "var(--chart-3)";
@@ -165,17 +165,17 @@ export function ConditionChart({
           return (
             <div
               key={id}
-              className="grid gap-control-gap rounded-control border-thin border-border p-control-inset"
+              className="grid min-w-0 grid-cols-1 gap-control-gap rounded-control border-thin border-border p-control-inset"
             >
               <div className="flex flex-wrap justify-between gap-control-gap">
-                <span className="text-label">
+                <span className="min-w-0 wrap-anywhere text-label">
                   <span className={styles.recordedSeriesTag} data-baseline={isBaseline}>
                     {isBaseline ? "Baseline" : "실험"}
                   </span>{" "}
                   {name}
                 </span>
                 <span
-                  className="font-mono text-meta tabular-nums"
+                  className="min-w-0 wrap-anywhere font-mono text-meta tabular-nums"
                   title={`${rawValue(average)} ± ${rawValue(stat?.sampleSd ?? null)}`}
                 >
                   {previewValue(average)} ± {previewValue(stat?.sampleSd ?? null)} · n=

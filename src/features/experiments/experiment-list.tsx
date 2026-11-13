@@ -85,7 +85,7 @@ export function ExperimentList({ rows }: { rows?: readonly ExperimentListRow[] }
         </CardDescription>
       </CardHeader>
       <div className="flex flex-wrap items-end gap-control-inset">
-        <form onSubmit={search} className="flex items-end gap-control-gap">
+        <form onSubmit={search} className="flex min-w-0 max-w-full items-end gap-control-gap">
           <Input
             key={query.search}
             name="q"
