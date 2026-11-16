@@ -3,6 +3,8 @@ import "server-only";
 import { mean, sampleSd } from "@/lib/demo-research";
 import type { RecordedDataset } from "./loader";
 import type { RecordedMetricDefinition } from "./model";
+import { readComparisonRelease } from "./comparison-release";
+import { buildReplacementBaseline } from "./replacement";
 import { readResearchArchive } from "./supabase-archive";
 import {
   parseBaselines,
@@ -341,8 +343,25 @@ function buildBaselineCatalog(source: BaselineSource, context?: ExperimentContex
   };
 }
 
-export type BaselineCatalog = ReturnType<typeof buildBaselineCatalog>;
-export type RecordedBaseline = BaselineCatalog["baselines"][number];
+type LegacyCatalog = ReturnType<typeof buildBaselineCatalog>;
+export type RecordedBaseline = Omit<
+  LegacyCatalog["baselines"][number],
+  "setting" | "sourceExperiment" | "runs"
+> & {
+  setting: string;
+  sourceExperiment: string;
+  runs: Record<number, { label: string; epsilon: number | null; delta: number | null }>;
+  displayedGenerationN?: number;
+  comparisonLimits?: string[];
+  nativeDiagnostics?: {
+    label: string;
+    mean: number | null;
+    sampleSd: number | null;
+    n: number;
+    missingReason: string | null;
+  }[];
+};
+export type BaselineCatalog = Omit<LegacyCatalog, "baselines"> & { baselines: RecordedBaseline[] };
 export type BaselineStat = RecordedBaseline["metrics"][string];
 
 export async function loadBaselineCatalog(context?: ExperimentContext) {
@@ -350,12 +369,22 @@ export async function loadBaselineCatalog(context?: ExperimentContext) {
     return { status: "disabled" } as const;
   }
   try {
+    const release = await readComparisonRelease();
+    if (release) {
+      return {
+        status: "ready",
+        data: buildReplacementBaseline(release.baseline, release.delta),
+      } as const;
+    }
     const archive = await readResearchArchive("dashboard-baselines.json.gz");
     if (archive === null) return { status: "missing" } as const;
-    const json = archive.toString("utf8");
+    const catalog: BaselineCatalog = buildBaselineCatalog(
+      parseBaselines(JSON.parse(archive.toString("utf8"))),
+      context,
+    );
     return {
       status: "ready",
-      data: buildBaselineCatalog(parseBaselines(JSON.parse(json)), context),
+      data: catalog,
     } as const;
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT")
