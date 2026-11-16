@@ -1,6 +1,9 @@
 import { DashboardPage } from "@/components/layout/dashboard-page";
 import { loadBaselineCatalog } from "@/features/recorded-comparison/baseline-loader";
-import { loadSelectedPerformance } from "@/features/selected-experiments/source";
+import {
+  loadSelectedPerformance,
+  type SelectedPerformance,
+} from "@/features/selected-experiments/source";
 import { MetricComparison } from "./metric-comparison";
 import { ResultsDetail } from "./results-detail";
 
@@ -8,6 +11,7 @@ export const metadata = { title: "결과표 | DXCEL" };
 
 const overviewMetricLabels = {
   xgb_cn: "XGB PR-AUC",
+  xgb_rmse: "XGB RMSE",
   wsd1: "1-way WSD",
   wsd3: "3-way WSD",
   spear: "Spearman 오차",
@@ -41,14 +45,13 @@ export default async function ResultsPage({
       .filter(({ model, excluded }) => model === "aim" && !excluded)
       .map((entry) => [entry.dataset, entry]),
   );
-  const comparablePairs = new Set(
-    selected?.baselineComparisons
-      .filter(({ status }) => status === "comparable_with_explicit_historical_version_limit")
-      .map(({ evaluation_group, baseline_id }) => JSON.stringify([evaluation_group, baseline_id])),
-  );
-  const canCompareToAim = (groupId: string, datasetId: string) => {
-    const aim = aimByDataset.get(datasetId);
-    return aim !== undefined && comparablePairs.has(JSON.stringify([groupId, aim.id]));
+  const canCompareToAim = (condition: SelectedPerformance["groups"][number]["condition"]) => {
+    const aim = aimByDataset.get(condition.dataset);
+    const pair = condition.comparisonEvidence?.find(({ baselineId }) => baselineId === aim?.id);
+    return (
+      !condition.referenceOnly &&
+      (pair?.comparable ?? pair?.status === "comparable_with_explicit_historical_version_limit")
+    );
   };
   const referenceBaseline = dataset ? aimByDataset.get(dataset) : undefined;
   const metricsByKey = new Map(
@@ -63,29 +66,44 @@ export default async function ResultsPage({
   });
   const overviewKeys = new Set(overviewMetrics.map(({ key }) => key));
   const pickReadings = (
-    readings: Record<string, { mean: number | null; sampleSd: number | null; n: number }>,
+    readings: Record<
+      string,
+      { mean: number | null; sampleSd: number | null; n: number; missingReason?: string | null }
+    >,
+    missingReasons?: Record<string, string | null>,
   ) =>
     Object.fromEntries(
       Object.entries(readings)
         .filter(([key]) => overviewKeys.has(key))
-        .map(([key, { mean, sampleSd, n }]) => [key, { mean, sampleSd, n }]),
+        .map(([key, { mean, sampleSd, n, missingReason }]) => [
+          key,
+          { mean, sampleSd, n, reason: missingReasons?.[key] ?? missingReason },
+        ]),
     );
   return (
     <DashboardPage title="실험 결과표">
       <MetricComparison
-        baselines={baselines.map(({ dataset, id, modelName, model, excluded, metrics }) => ({
-          dataset,
-          label: modelName,
-          model,
-          excluded,
-          reference: aimByDataset.get(dataset)?.id === id,
-          metrics: pickReadings(metrics),
-        }))}
-        experiments={groups.map(({ condition }) => ({
+        baselines={baselines.map(
+          ({ dataset, id, modelName, model, excluded, metrics, comparisonLimits }) => ({
+            dataset,
+            label: modelName,
+            model,
+            excluded,
+            reference: aimByDataset.get(dataset)?.id === id,
+            metrics: pickReadings(metrics),
+            comparisonNote: comparisonLimits?.length ? "비교 제한 있음" : undefined,
+          }),
+        )}
+        experiments={groups.map(({ condition, summaries }) => ({
           dataset: condition.dataset,
-          label: `${condition.experimentId} · ${condition.condition}`,
-          comparableToAim: canCompareToAim(condition.id, condition.dataset),
-          metrics: pickReadings(condition.metrics),
+          label: `${condition.experimentId} · ${condition.label}${condition.referenceOnly ? " · 참고용" : ""}`,
+          comparableToAim: canCompareToAim(condition),
+          comparisonNote: condition.referenceOnly
+            ? "참고용"
+            : (condition.comparisonEvidence?.find(
+                ({ baselineId }) => baselineId === aimByDataset.get(condition.dataset)?.id,
+              )?.status ?? "비교 조건 확인 필요"),
+          metrics: pickReadings(condition.metrics, summaries),
         }))}
         metrics={overviewMetrics}
       />

@@ -19,10 +19,16 @@ const categories = [
   ["privacy", "Privacy"],
 ] as const;
 
+function appliesToDataset(key: string, dataset: string) {
+  if (key === "xgb_cn") return dataset !== "california_housing";
+  if (key === "xgb_rmse") return dataset === "california_housing";
+  return true;
+}
+
 export function MetricComparison({
   baselines,
   experiments,
-  metrics,
+  metrics: allMetrics,
 }: {
   baselines: OverviewSeries[];
   experiments: OverviewSeries[];
@@ -39,6 +45,12 @@ export function MetricComparison({
     : defaults.length
       ? defaults
       : datasets.slice(0, 2);
+  const metrics = allMetrics.filter(({ key }) =>
+    visible.some((dataset) => appliesToDataset(key, dataset)),
+  );
+  const hasExcludedBaseline = baselines.some(
+    ({ dataset, excluded }) => excluded && visible.includes(dataset),
+  );
   const options = [
     ...new Map(experiments.map(({ label }) => [label, { value: label, label }])).values(),
   ];
@@ -62,13 +74,15 @@ export function MetricComparison({
   if (!datasets.length || !metrics.length) return null;
 
   const ranges = metrics.map((metric) => {
-    const bounds = rows.flatMap(({ series }) =>
-      series.flatMap((entry) => {
-        const stat = entry?.metrics[metric.key];
-        return stat?.mean == null
-          ? []
-          : [stat.mean - (stat.sampleSd ?? 0), stat.mean + (stat.sampleSd ?? 0)];
-      }),
+    const bounds = rows.flatMap(({ dataset, series }) =>
+      appliesToDataset(metric.key, dataset)
+        ? series.flatMap((entry) => {
+            const stat = entry?.metrics[metric.key];
+            return stat?.mean == null
+              ? []
+              : [stat.mean - (stat.sampleSd ?? 0), stat.mean + (stat.sampleSd ?? 0)];
+          })
+        : [],
     );
     if (metric.target != null) bounds.push(metric.target);
     if (!bounds.length) return [0, 1] as const;
@@ -153,7 +167,11 @@ export function MetricComparison({
                 <th scope="row">{datasetLabels[dataset] ?? dataset}</th>
                 {metrics.map((metric, index) => (
                   <td key={metric.key}>
-                    <MetricPlot metric={metric} series={series} range={ranges[index]!} />
+                    {appliesToDataset(metric.key, dataset) ? (
+                      <MetricPlot metric={metric} series={series} range={ranges[index]!} />
+                    ) : (
+                      <span className="text-caption text-foreground-muted">해당 없음</span>
+                    )}
                   </td>
                 ))}
               </tr>
@@ -162,7 +180,10 @@ export function MetricComparison({
         </table>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-control-gap text-caption text-foreground-muted">
-        <p>점 평균 · 세로선 ± 표본 표준편차 · 점선 AIM · † 주 비교 제외</p>
+        <p>
+          점 평균 · 세로선 ± 표본 표준편차 · 점선 AIM
+          {hasExcludedBaseline && " · † 주 비교 제외"}
+        </p>
         <ul className="flex flex-wrap gap-control-inset">
           {models.map(({ key, symbol, label }) => (
             <li key={key} className={styles.seriesColor} data-series={key}>

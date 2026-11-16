@@ -5,7 +5,7 @@ import {
   datasetLabels,
   directionLabel,
   improvement,
-  previewValue,
+  formatMetricValue,
   recordedMetricName,
   scopeLabels,
   statusLabels,
@@ -37,7 +37,7 @@ export function ResultsDetail({
   groups: SelectedPerformance["groups"];
   allMetrics: RecordedMetricDefinition[];
   referenceBaseline: RecordedBaseline | undefined;
-  canCompareToAim: (groupId: string, datasetId: string) => boolean;
+  canCompareToAim: (condition: SelectedPerformance["groups"][number]["condition"]) => boolean;
   baselineAvailable: boolean;
   experimentsAvailable: boolean;
 }) {
@@ -47,7 +47,10 @@ export function ResultsDetail({
     ...datasetBaselines.map((entry) => ({
       id: entry.id,
       label: entry.modelName,
-      detail: entry.setting,
+      detail: `${entry.sourceExperiment} · ${entry.setting}`,
+      displayedGenerationN: entry.displayedGenerationN,
+      limits: entry.comparisonLimits,
+      comparisonNote: entry.comparisonLimits?.length ? "비교 제한 있음" : null,
       baseline: true,
       comparableToAim: false,
       exclusion: entry.excluded ? entry.exclusionReason : null,
@@ -67,9 +70,18 @@ export function ResultsDetail({
     ...datasetGroups.map(({ condition, summaries }) => ({
       id: condition.id,
       label: condition.experimentId,
-      detail: condition.condition,
+      detail: condition.label,
+      displayedGenerationN: condition.displayedGenerationN,
+      limits: condition.comparisonEvidence?.find(
+        ({ baselineId }) => baselineId === referenceBaseline?.id,
+      )?.limits,
+      comparisonNote: condition.referenceOnly
+        ? "참고용"
+        : (condition.comparisonEvidence?.find(
+            ({ baselineId }) => baselineId === referenceBaseline?.id,
+          )?.status ?? "비교 조건 확인 필요"),
       baseline: false,
-      comparableToAim: canCompareToAim(condition.id, condition.dataset),
+      comparableToAim: canCompareToAim(condition),
       exclusion: null,
       reading: (key: string) => {
         const stat = condition.metrics[key];
@@ -125,7 +137,7 @@ export function ResultsDetail({
                 {referenceBaseline.modelName} ({referenceBaseline.setting}) 대비{" "}
                 <span className="font-semibold text-success">더 좋음</span> ·{" "}
                 <span className="font-semibold text-danger">더 나쁨</span> · 비교 근거가 있는 값에만
-                색상 적용. 평가 버전 차이 있음 · 통계적 유의성 미평가.
+                색상 적용. 비교 제한은 각 열에서 확인 · 통계적 유의성 미평가.
               </span>
             )}
           </p>
@@ -137,28 +149,59 @@ export function ResultsDetail({
               <thead>
                 <tr>
                   <th scope="col">평가 지표</th>
-                  {columns.map(({ id, label, detail, baseline, exclusion }) => (
-                    <th
-                      key={id}
-                      scope="col"
-                      data-baseline={baseline}
-                      data-reference={id === referenceBaseline?.id}
-                    >
-                      <span className="block text-label font-semibold">{label}</span>
-                      {id === referenceBaseline?.id && (
-                        <span className="block text-caption text-primary-text">비교 기준</span>
-                      )}
-                      <span className="block text-caption text-foreground-muted">{detail}</span>
-                      {exclusion && (
-                        <span
-                          className="block text-caption text-foreground-muted"
-                          title={exclusion}
-                        >
-                          주 비교 제외 · 참고용
-                        </span>
-                      )}
-                    </th>
-                  ))}
+                  {columns.map(
+                    ({
+                      id,
+                      label,
+                      detail,
+                      baseline,
+                      exclusion,
+                      comparisonNote,
+                      limits,
+                      displayedGenerationN,
+                    }) => (
+                      <th
+                        key={id}
+                        scope="col"
+                        data-baseline={baseline}
+                        data-reference={id === referenceBaseline?.id}
+                      >
+                        <span className="block text-label font-semibold">{label}</span>
+                        {id === referenceBaseline?.id && (
+                          <span className="block text-caption text-primary-text">비교 기준</span>
+                        )}
+                        <span className="block text-caption text-foreground-muted">{detail}</span>
+                        {displayedGenerationN !== undefined && (
+                          <span className="block text-caption">
+                            표기 생성 n={displayedGenerationN}
+                          </span>
+                        )}
+                        {comparisonNote &&
+                          (limits?.length ? (
+                            <details className="text-caption text-foreground-muted">
+                              <summary className="cursor-pointer">{comparisonNote}</summary>
+                              <ul className="list-disc pl-control-inset">
+                                {limits.map((limit) => (
+                                  <li key={limit}>{limit}</li>
+                                ))}
+                              </ul>
+                            </details>
+                          ) : (
+                            <span className="block text-caption text-foreground-muted">
+                              {comparisonNote}
+                            </span>
+                          ))}
+                        {exclusion && (
+                          <span
+                            className="block text-caption text-foreground-muted"
+                            title={exclusion}
+                          >
+                            주 비교 제외 · 참고용
+                          </span>
+                        )}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               {axes.map(([axis, label]) => {
@@ -202,6 +245,11 @@ export function ResultsDetail({
                               {stat?.mean == null ? (
                                 <>
                                   <span aria-label="미측정">—</span>
+                                  {stat && (
+                                    <span className="text-caption text-foreground-muted">
+                                      {" · "}n={stat.n}/{stat.expected}
+                                    </span>
+                                  )}
                                   {stat?.reason && (
                                     <span className="block text-caption text-foreground-muted">
                                       {stat.reason}
@@ -221,11 +269,11 @@ export function ResultsDetail({
                                     {(better || worse) && (
                                       <span aria-hidden="true">{better ? "▲ " : "▼ "}</span>
                                     )}
-                                    {previewValue(stat.mean)}
+                                    {formatMetricValue(metric, stat.mean)}
                                   </span>
                                   <span className="block text-caption text-foreground-muted">
                                     {stat.sampleSd !== null &&
-                                      `± ${previewValue(stat.sampleSd)} · `}
+                                      `± ${formatMetricValue(metric, stat.sampleSd, "sd")} · `}
                                     n={stat.n}/{stat.expected}
                                     {stat.sampleSd === null && " · 표준편차 —"}
                                   </span>
