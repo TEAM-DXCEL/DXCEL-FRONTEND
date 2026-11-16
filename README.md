@@ -19,6 +19,26 @@ pnpm dev
 백엔드가 실행되면 `.env.local`에 로컬 publishable/anon key를 입력합니다.
 관리자 키와 수집 token은 `NEXT_PUBLIC_*`에 넣지 않습니다.
 
+## 교체 실험 데이터 로컬 확인
+
+운영 Supabase 데이터로 확인하려면 `DXCEL_COMPARISON_SUPABASE_URL`과
+`DXCEL_COMPARISON_SUPABASE_SECRET_KEY`를 개발 서버에 설정하고 `pnpm dev`를 실행합니다.
+`DXCEL_LOCAL_REPLACEMENT_DIR`를 지정하지 않으면 현재 등록된 비교 버전을 Supabase에서 읽습니다.
+
+검증된 `dashboard-baselines.json`과 `selected_experiments.json`(schema version 2)을
+`.local/results/dashboard_export/replacement_audit_20261117/`에 둡니다. 기존 버전 1
+선정 실험과 기록은 각각 `.local/selected_experiments.json`, `.local/dashboard.json`에서
+읽습니다. 기존 파일이 다른 디렉터리에 있으면 `DXCEL_LOCAL_ORIGINAL_DIR`로 지정합니다.
+
+```bash
+DXCEL_LOCAL_REPLACEMENT_DIR=.local/results/dashboard_export/replacement_audit_20261117 pnpm dev
+```
+
+이 모드는 Next.js 개발 서버에서만 활성화됩니다. 공식 기준과 선정 실험의 변경은
+`/baselines`, `/compare`, `/results`, `/overview`에서 확인할 수 있습니다.
+`/experiments`는 선정 비교 제외 조건의 원래 실험 이력도 유지합니다.
+로컬 파일은 Git에서 제외하며 원격 등록 실행을 조회하지 않습니다.
+
 ## 팀 공유 서버
 
 ```bash

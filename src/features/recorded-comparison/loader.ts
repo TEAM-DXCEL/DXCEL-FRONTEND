@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { mean, sampleSd } from "@/lib/demo-research";
 import { loadBaselineCatalog } from "./baseline-loader";
 import type { RecordedMetricDefinition } from "./model";
+import { localReplacementDirectory, readLocalOriginal } from "./replacement-local";
 import { readResearchArchive } from "./supabase-archive";
 import {
   parseDashboard,
@@ -461,7 +462,9 @@ export async function loadRecordedDashboard() {
     return { status: "disabled" } as const;
   }
   try {
-    const archive = await readResearchArchive("dashboard.json.gz");
+    const archive = localReplacementDirectory()
+      ? await readLocalOriginal("dashboard.json")
+      : await readResearchArchive("dashboard.json.gz");
     if (archive === null) return { status: "missing" } as const;
     const json = archive.toString("utf8");
     const input: unknown = JSON.parse(json);

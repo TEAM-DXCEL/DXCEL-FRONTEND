@@ -1,5 +1,6 @@
 import "server-only";
 
+import { localReplacementDirectory } from "./replacement-local";
 import { createResearchClient } from "./supabase-archive";
 import type { RecordedCondition, RecordedStat } from "./loader";
 import type { RecordedMetricDefinition } from "./model";
@@ -45,6 +46,7 @@ type ComparisonRunResponse = {
 };
 
 export async function loadSupabaseComparisonRun() {
+  if (localReplacementDirectory()) return null;
   const id = process.env.DXCEL_COMPARISON_RUN_ID;
   const supabase = await createResearchClient();
   if (!supabase || !id) return null;

@@ -1,6 +1,6 @@
 import { TableViewport } from "@/components/layout/table-viewport";
 import type { BaselineCatalog } from "@/features/recorded-comparison/baseline-loader";
-import type { RecordedDataset } from "@/features/recorded-comparison/loader";
+import type { ComparisonCondition } from "@/features/recorded-comparison/condition-chart";
 import {
   baselineDifference,
   baselineName,
@@ -21,10 +21,16 @@ const axes = [
 ];
 
 export function RecordedOverview({
-  data,
+  conditions,
+  definitions,
   catalog,
+  local = false,
+  replacement = false,
 }: {
-  data: RecordedDataset;
+  conditions: readonly ComparisonCondition[];
+  definitions: readonly RecordedMetricDefinition[];
+  local?: boolean;
+  replacement?: boolean;
   catalog: BaselineCatalog;
 }) {
   if (catalog.dashboardMismatch) {
@@ -34,12 +40,12 @@ export function RecordedOverview({
       </p>
     );
   }
-  const definitions = new Map(data.metrics.map((metric) => [metric.key, metric]));
+  const byKey = new Map(definitions.map((metric) => [metric.key, metric]));
   const metrics = axes.flatMap(({ name, key }) => {
-    const metric = definitions.get(key);
+    const metric = byKey.get(key);
     return metric ? [{ name, metric }] : [];
   });
-  const datasets = new Set(data.conditions.map(({ dataset }) => dataset));
+  const datasets = new Set(conditions.map(({ dataset }) => dataset));
   const groups = catalog.baselines.filter(
     (baseline) => !baseline.excluded && datasets.has(baseline.dataset),
   );
@@ -50,13 +56,17 @@ export function RecordedOverview({
       aria-labelledby="recorded-overview-title"
     >
       <header>
-        <p className="text-caption text-foreground-muted">Supabase · 실험 결과</p>
+        <p className="text-caption text-foreground-muted">
+          {local ? "로컬 교체 검증 · 실험 결과" : "Supabase · 실험 결과"}
+        </p>
         <h2 id="recorded-overview-title" className="text-heading-sm">
           세 지표 모두 Baseline보다 좋은 조건
         </h2>
         <p className="text-meta text-foreground-muted">
-          같은 데이터셋과 Baseline 안에서 세 지표의 비교 조건이 모두 확인된 결과만 봅니다. 최신
-          Phase부터 최대 5건을 표시합니다.
+          같은 데이터셋과 Baseline 안에서 세 지표의 비교 조건이 모두 확인된 결과를 최대 5건
+          표시합니다.
+          {replacement &&
+            " 비교는 기술 통계이며 비교 제한과 근거는 비교 화면에서 확인할 수 있습니다."}
         </p>
       </header>
       {metrics.length !== axes.length || !groups.length ? (
@@ -66,10 +76,23 @@ export function RecordedOverview({
       ) : (
         <div className="grid gap-panel-gap">
           {groups.map((baseline) => {
-            const comparable = data.conditions.flatMap((condition) => {
-              if (condition.dataset !== baseline.dataset || condition.experimentId === null)
+            const regressionMetric =
+              replacement && baseline.task === "regression"
+                ? byKey.get("xgb_full_rmse")
+                : undefined;
+            const groupMetrics = regressionMetric
+              ? metrics.map((entry) =>
+                  entry.name === "Utility" ? { ...entry, metric: regressionMetric } : entry,
+                )
+              : metrics;
+            const comparable = conditions.flatMap((condition) => {
+              if (
+                condition.dataset !== baseline.dataset ||
+                condition.experimentId === null ||
+                condition.referenceOnly
+              )
                 return [];
-              const values = metrics.flatMap(({ metric }) => {
+              const values = groupMetrics.flatMap(({ metric }) => {
                 const stat = condition.metrics[metric.key];
                 const delta = baselineDifference(metric, stat, baseline.metrics[metric.key]);
                 return stat?.mean != null && delta !== null
@@ -82,7 +105,7 @@ export function RecordedOverview({
               values.every(({ delta }) => delta > 0),
             );
             const visible = improved
-              .toSorted((a, b) => b.condition.phase - a.condition.phase)
+              .toSorted((a, b) => (b.condition.phase ?? 0) - (a.condition.phase ?? 0))
               .slice(0, 5);
             return (
               <section
@@ -105,7 +128,7 @@ export function RecordedOverview({
                           <th scope="col" className="px-control-inset py-control-gap">
                             실험 조건
                           </th>
-                          {metrics.map(({ name, metric }) => (
+                          {groupMetrics.map(({ name, metric }) => (
                             <MetricHeader
                               key={metric.key}
                               name={name}
@@ -119,8 +142,21 @@ export function RecordedOverview({
                         {visible.map(({ condition, values }) => (
                           <tr key={condition.id} className="border-t border-border">
                             <th scope="row" className="px-control-inset py-control-gap text-label">
-                              {condition.experimentId} · Phase {condition.phase} ·{" "}
-                              {condition.condition}
+                              {condition.experimentId} ·{" "}
+                              {condition.phase === null
+                                ? condition.label
+                                : `Phase ${condition.phase} · ${condition.condition}`}
+                              {condition.comparisonEvidence?.find(
+                                ({ baselineId }) => baselineId === baseline.id,
+                              )?.status && (
+                                <small className="block text-foreground-muted">
+                                  {
+                                    condition.comparisonEvidence.find(
+                                      ({ baselineId }) => baselineId === baseline.id,
+                                    )?.status
+                                  }
+                                </small>
+                              )}
                             </th>
                             {values.map(({ key, mean, delta }) => (
                               <td key={key} className="px-control-inset py-control-gap font-mono">

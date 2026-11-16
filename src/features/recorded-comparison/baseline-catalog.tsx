@@ -8,7 +8,7 @@ import {
   baselineName,
   datasetLabels,
   directionLabel,
-  previewValue,
+  formatMetricValue,
   rawValue,
   recordedMetricName,
   scopeLabels,
@@ -42,6 +42,34 @@ export function BaselineMetricDetail({
         <p>
           {baselineName(baseline)} · {datasetLabels[baseline.dataset] ?? baseline.dataset}
         </p>
+        {baseline.displayedGenerationN !== undefined && (
+          <p>표기 생성 n={baseline.displayedGenerationN}</p>
+        )}
+        {baseline.comparisonLimits?.length ? (
+          <details>
+            <summary className="cursor-pointer text-label">비교 제한</summary>
+            <ul className="list-disc pl-control-inset">
+              {baseline.comparisonLimits.map((limit) => (
+                <li key={limit}>{limit}</li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+        {baseline.nativeDiagnostics?.length ? (
+          <details>
+            <summary className="cursor-pointer text-label">
+              Native population 진단 · 별도 평가
+            </summary>
+            <ul className="list-disc pl-control-inset">
+              {baseline.nativeDiagnostics.map(({ label, mean, sampleSd, n, missingReason }) => (
+                <li key={label}>
+                  {label} · {rawValue(mean)} ± {rawValue(sampleSd)} · 유효 생성 n={n}
+                  {missingReason && ` · ${missingReason}`}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
         {baseline.excluded && <p>주 비교 제외·참고용 · {baseline.exclusionReason}</p>}
         <p>
           {metricLabel(metric)} · {directionLabel(metric)}
@@ -49,7 +77,8 @@ export function BaselineMetricDetail({
         {stat ? (
           <>
             <p className="break-all font-mono">
-              {rawValue(stat.mean)} ± {rawValue(stat.sampleSd)} · 유효 생성 반복 {stat.n}/
+              {formatMetricValue(metric, stat.mean)} ±{" "}
+              {formatMetricValue(metric, stat.sampleSd, "sd")} · 유효 생성 반복 {stat.n}/
               {stat.expected}회
             </p>
             {stat.mean === null ? (
@@ -66,7 +95,9 @@ export function BaselineMetricDetail({
                   className="rounded-control bg-surface-muted p-control-inset [overflow-wrap:anywhere]"
                 >
                   <p>
-                    시드 {point.seed} · <span className="font-mono">{rawValue(point.value)}</span>
+                    {baseline.displayedGenerationN === undefined ? "시드" : "원본 생성 반복"}{" "}
+                    {point.seed} ·{" "}
+                    <span className="font-mono">{formatMetricValue(metric, point.value)}</span>
                     {point.value === null &&
                       ` · ${statusLabels[point.status]} · ${point.missingReason ?? "사유 미확인"}`}
                   </p>
@@ -91,7 +122,7 @@ export function BaselineMetricDetail({
         )}
         <p className="text-foreground-muted">
           {baseline.protocol} · 분할 {baseline.split} · 공통 N{" "}
-          {baseline.commonN.toLocaleString("ko-KR")}행 · 생성량{" "}
+          {baseline.commonN?.toLocaleString("ko-KR") ?? "미확인"}행 · 생성량{" "}
           {baseline.outputRows.map((rows) => rows.toLocaleString("ko-KR")).join(" / ")}행
         </p>
       </div>
@@ -123,7 +154,12 @@ export function BaselineCatalogTable({ catalog }: { catalog: BaselineCatalog }) 
         <div>
           <h2 className="text-heading-sm">데이터셋별 기준값</h2>
           <p className="text-meta text-foreground-muted">
-            paper_aligned · {datasets.length}개 데이터셋 · 모델 {models.length}종
+            {catalog.baselines.some(
+              ({ displayedGenerationN }) => displayedGenerationN !== undefined,
+            )
+              ? "공식 Baseline"
+              : "paper_aligned"}{" "}
+            · {datasets.length}개 데이터셋 · 모델 {models.length}종
           </p>
         </div>
         <Select
@@ -139,7 +175,7 @@ export function BaselineCatalogTable({ catalog }: { catalog: BaselineCatalog }) 
         />
       </div>
       <p className="mb-control-gap text-meta text-foreground-muted">
-        평균을 눌러 전체 자릿수, 표본 표준편차와 생성 반복값을 확인하세요.
+        평균을 눌러 표본 표준편차, 생성 반복값과 비교 조건을 확인하세요.
       </p>
       <div
         role="region"
@@ -195,12 +231,14 @@ export function BaselineCatalogTable({ catalog }: { catalog: BaselineCatalog }) 
                           className={styles.recordedBaselineCell}
                           title={
                             stat
-                              ? `${rawValue(stat.mean)} ± ${rawValue(stat.sampleSd)} · ${stat.n}/${stat.expected}회`
+                              ? metric
+                                ? `${formatMetricValue(metric, stat.mean)} ± ${formatMetricValue(metric, stat.sampleSd, "sd")} · ${stat.n}/${stat.expected}회`
+                                : undefined
                               : undefined
                           }
                           aria-pressed={detailId === baseline.id}
                           aria-controls="baseline-catalog-detail"
-                          aria-label={`${datasetLabels[dataset] ?? dataset} · ${baseline.modelName} · ${rawValue(stat?.mean ?? null)} · 생성 반복 보기`}
+                          aria-label={`${datasetLabels[dataset] ?? dataset} · ${baseline.modelName} · ${metric ? formatMetricValue(metric, stat?.mean ?? null) : "—"} · 생성 반복 보기`}
                           onClick={() => {
                             setDetailId(baseline.id);
                             requestAnimationFrame(() =>
@@ -212,7 +250,7 @@ export function BaselineCatalogTable({ catalog }: { catalog: BaselineCatalog }) 
                         >
                           <span className="flex flex-wrap items-center gap-x-control-gap">
                             <strong className="font-mono text-table font-semibold tabular-nums">
-                              {previewValue(stat?.mean ?? null)}
+                              {metric ? formatMetricValue(metric, stat?.mean ?? null) : "—"}
                             </strong>
                             {baseline.excluded && (
                               <span className={styles.recordedReferenceTag}>
@@ -222,10 +260,15 @@ export function BaselineCatalogTable({ catalog }: { catalog: BaselineCatalog }) 
                           </span>
                           {stat?.mean != null && (
                             <small>
-                              ± {previewValue(stat.sampleSd)} · n={stat.n}/{stat.expected}
+                              ± {metric ? formatMetricValue(metric, stat.sampleSd, "sd") : "—"} · n=
+                              {stat.n}/{stat.expected}
                             </small>
                           )}
                           {!sameSource && <small>{baseline.sourceExperiment}</small>}
+                          {baseline.displayedGenerationN !== undefined && (
+                            <small>표기 생성 n={baseline.displayedGenerationN}</small>
+                          )}
+                          {baseline.comparisonLimits?.length ? <small>비교 제한 있음</small> : null}
                           {stat?.mean == null && (
                             <small>{stat?.missingReason ?? "지표 기록 없음"}</small>
                           )}

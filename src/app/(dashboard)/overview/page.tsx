@@ -1,12 +1,19 @@
 import { DashboardPage } from "@/components/layout/dashboard-page";
 import { RecordedOverview } from "@/features/overview/recorded-overview";
 import { TopExperiments } from "@/features/overview/top-experiments";
+import { readComparisonRelease } from "@/features/recorded-comparison/comparison-release";
+import { loadSelectedPerformance } from "@/features/selected-experiments/source";
 import { loadRecordedDashboard } from "@/features/recorded-comparison/loader";
 
 export const metadata = { title: "Overview | DXCEL" };
 
 export default async function OverviewPage() {
-  const result = await loadRecordedDashboard();
+  const releaseRequest = readComparisonRelease();
+  const [result, release, selected] = await Promise.all([
+    loadRecordedDashboard(),
+    releaseRequest,
+    releaseRequest.then((release) => (release ? loadSelectedPerformance() : null)),
+  ]);
   return (
     <DashboardPage
       title="Overview"
@@ -15,7 +22,19 @@ export default async function OverviewPage() {
       {result.status === "disabled" ? (
         <TopExperiments />
       ) : result.status === "ready" && result.catalog.status === "ready" ? (
-        <RecordedOverview data={result.data} catalog={result.catalog.data} />
+        <RecordedOverview
+          conditions={
+            selected
+              ? [...result.data.conditions, ...selected.groups.map(({ condition }) => condition)]
+              : result.data.conditions
+          }
+          definitions={
+            selected ? [...result.data.metrics, ...selected.metrics] : result.data.metrics
+          }
+          catalog={result.catalog.data}
+          local={release?.source === "local"}
+          replacement={release !== null}
+        />
       ) : (
         <p className="rounded-card border-thin border-border bg-surface p-card-inset text-body text-foreground">
           비교 결과 미확인 ·{" "}

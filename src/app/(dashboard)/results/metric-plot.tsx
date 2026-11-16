@@ -1,7 +1,11 @@
-import { improvement, type RecordedMetricDefinition } from "@/features/recorded-comparison/model";
+import {
+  formatMetricValue,
+  improvement,
+  type RecordedMetricDefinition,
+} from "@/features/recorded-comparison/model";
 import styles from "./metric-comparison.module.css";
 
-type Reading = { mean: number | null; sampleSd: number | null; n: number };
+type Reading = { mean: number | null; sampleSd: number | null; n: number; reason?: string | null };
 export type OverviewSeries = {
   dataset: string;
   label: string;
@@ -9,6 +13,7 @@ export type OverviewSeries = {
   excluded?: boolean;
   reference?: boolean;
   comparableToAim?: boolean;
+  comparisonNote?: string;
   metrics: Record<string, Reading>;
 };
 
@@ -41,8 +46,8 @@ export function MetricPlot({
   const tone = change === null || change === 0 ? undefined : change > 0 ? "better" : "worse";
   const position = (value: number) => ((high - value) / (high - low)) * 100;
   const format = (value: number) =>
-    metric.unit === "proportion"
-      ? `${Number((value * 100).toPrecision(4))}%`
+    metric.statistic === "tpr_at_fpr"
+      ? formatMetricValue(metric, value)
       : String(Number(value.toPrecision(4)));
 
   return (
@@ -79,8 +84,8 @@ export function MetricPlot({
                 key={key}
                 className={styles.missingPoint}
                 style={{ left }}
-                title={`${name} 미측정`}
-                aria-label={`${name} 미측정`}
+                title={`${name} 미측정${stat?.reason ? ` · ${stat.reason}` : ""}`}
+                aria-label={`${name} 미측정${stat?.reason ? ` · ${stat.reason}` : ""}`}
               >
                 —
               </span>
@@ -88,7 +93,7 @@ export function MetricPlot({
           }
           const y = position(stat.mean);
           const sd = stat.sampleSd;
-          const summary = `${name}${entry?.excluded ? " · 주 비교 제외" : ""} · 평균 ${stat.mean} · 표본 표준편차 ${sd ?? "—"} · n=${stat.n}`;
+          const summary = `${name}${entry?.excluded ? " · 주 비교 제외" : ""} · 평균 ${formatMetricValue(metric, stat.mean)} · 표본 표준편차 ${formatMetricValue(metric, sd, "sd")} · 유효 생성 n=${stat.n}${entry?.comparisonNote ? ` · ${entry.comparisonNote}` : ""}`;
           return (
             <div key={key} className={styles.plotSeries} style={{ left }} data-series={key}>
               {sd !== null && (

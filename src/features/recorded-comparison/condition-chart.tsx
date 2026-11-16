@@ -3,9 +3,8 @@ import {
   baselineComparisonNote,
   baselineDifference,
   baselineName,
-  formatChange,
+  formatMetricValue,
   directionLabel,
-  previewValue,
   rawValue,
   type RecordedMetricDefinition,
 } from "./model";
@@ -13,13 +12,26 @@ import styles from "@/features/comparison/comparison.module.css";
 import type { RecordedBaseline } from "./baseline-loader";
 import type { RecordedCondition, RecordedDataset } from "./loader";
 
-export type ComparisonCondition = Omit<RecordedCondition, "phase"> & { phase: number | null };
+export type ComparisonCondition = Omit<RecordedCondition, "phase"> & {
+  phase: number | null;
+  displayedGenerationN?: number;
+  referenceOnly?: boolean;
+  comparisonEvidence?: {
+    baselineId: string;
+    status: string;
+    comparable?: boolean;
+    limits?: string[];
+  }[];
+};
 
 export function phaseLabel(phase: ComparisonCondition["phase"]) {
   return phase === null ? "Phase 미확인" : `Phase ${phase}`;
 }
 
 export function conditionName(condition: ComparisonCondition) {
+  if (condition.displayedGenerationN !== undefined) {
+    return `${condition.experimentId} · ${condition.label}${condition.referenceOnly ? " · 참고용" : ""}`;
+  }
   return `${condition.experimentId ?? "소속 미확인"} · ${phaseLabel(condition.phase)} · ${condition.dataset} · ${condition.condition}`;
 }
 
@@ -64,7 +76,14 @@ export function ConditionChart({
     name: conditionName(condition),
     stat: condition.metrics[metric.key],
     isBaseline: false,
-    note: baseline ? baselineComparisonNote(baseline, metric.key, condition.dataset) : null,
+    note: baseline
+      ? baselineComparisonNote(
+          baseline,
+          metric.key,
+          condition.dataset,
+          condition.comparisonEvidence,
+        )
+      : null,
     delta: baselineDifference(metric, condition.metrics[metric.key], referenceStat),
     points: condition.runIds.flatMap((id) => {
       const run = runs[id];
@@ -107,7 +126,7 @@ export function ConditionChart({
   const target = metric.target;
   const targetVisible = target !== null && target >= min && target <= max;
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((fraction) => min + (max - min) * fraction);
-  const tickLabels = ticks.map(previewValue);
+  const tickLabels = ticks.map((value) => formatMetricValue(metric, value));
   const distinctTickLabels = new Set(tickLabels).size === ticks.length;
 
   return (
@@ -155,7 +174,7 @@ export function ConditionChart({
                 : "선택한 Baseline"
               : delta === null
                 ? note
-                : `Baseline 대비 ${formatChange(delta)}`;
+                : `Baseline 대비 ${formatMetricValue(metric, delta, "change")}`;
           const deltaColor =
             delta === null || delta === 0
               ? "var(--chart-neutral)"
@@ -178,7 +197,8 @@ export function ConditionChart({
                   className="min-w-0 wrap-anywhere font-mono text-meta tabular-nums"
                   title={`${rawValue(average)} ± ${rawValue(stat?.sampleSd ?? null)}`}
                 >
-                  {previewValue(average)} ± {previewValue(stat?.sampleSd ?? null)} · n=
+                  {formatMetricValue(metric, average)} ±{" "}
+                  {formatMetricValue(metric, stat?.sampleSd ?? null, "sd")} · n=
                   {stat?.n ?? 0}
                 </span>
               </div>
@@ -260,7 +280,7 @@ export function ConditionChart({
                         top: 2 + (index % 5) * 7,
                         backgroundColor: seriesColor,
                       }}
-                      title={`${label} · ${rawValue(value)}`}
+                      title={`${label} · ${formatMetricValue(metric, value)}`}
                     />
                   ))}
                 </div>

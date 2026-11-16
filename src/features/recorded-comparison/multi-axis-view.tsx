@@ -12,8 +12,7 @@ import {
   baselineDifference,
   baselineName,
   directionLabel,
-  formatChange,
-  previewValue,
+  formatMetricValue,
   rawValue,
   recordedMetricName,
   scopeLabels,
@@ -87,7 +86,14 @@ export function RecordedMultiAxisView({
       return {
         mean: stat?.mean ?? null,
         delta: baselineDifference(metric, stat, baseline?.metrics[metric.key]),
-        note: baseline ? baselineComparisonNote(baseline, metric.key, condition.dataset) : null,
+        note: baseline
+          ? baselineComparisonNote(
+              baseline,
+              metric.key,
+              condition.dataset,
+              condition.comparisonEvidence,
+            )
+          : null,
       };
     }),
   }));
@@ -117,7 +123,10 @@ export function RecordedMultiAxisView({
     targetPosition: metric.target === null ? undefined : position(metric.target),
     ticks: [0.25, 0.5, 0.75, 1].map((position) => ({
       position,
-      label: tickLabel(min + (max - min) * position),
+      label:
+        metric.statistic === "tpr_at_fpr"
+          ? formatMetricValue(metric, min + (max - min) * position)
+          : tickLabel(min + (max - min) * position),
     })),
   }));
   const entries = series.map(({ id, name, values }) => ({
@@ -129,7 +138,7 @@ export function RecordedMultiAxisView({
         : {
             position: axes[index]!.position(mean),
             label: rawValue(mean),
-            displayLabel: previewValue(mean),
+            displayLabel: formatMetricValue(axes[index]!.metric, mean),
             delta,
           },
     ),
@@ -180,7 +189,7 @@ export function RecordedMultiAxisView({
                     : null
                   : delta === 0
                     ? "동률"
-                    : `${delta > 0 ? "개선" : "저하"} ${formatChange(delta)}`;
+                    : `${delta > 0 ? "개선" : "저하"} ${formatMetricValue(metric, delta, "change")}`;
               return (
                 <section key={axis} className={styles.recordedAxisCard}>
                   <h3 className="flex items-baseline justify-between gap-control-gap text-label">
@@ -202,7 +211,7 @@ export function RecordedMultiAxisView({
                         className="font-mono text-body-lg font-semibold tabular-nums"
                         title={rawValue(reference)}
                       >
-                        {previewValue(reference)}
+                        {formatMetricValue(metric, reference)}
                       </dd>
                     </div>
                     <div>
@@ -211,7 +220,7 @@ export function RecordedMultiAxisView({
                         className="font-mono text-body-lg font-semibold text-chart-3 tabular-nums"
                         title={rawValue(current)}
                       >
-                        {previewValue(current)}
+                        {formatMetricValue(metric, current)}
                       </dd>
                     </div>
                   </dl>
@@ -367,10 +376,12 @@ export function RecordedMultiAxisView({
                           </th>
                           {condition.values.map(({ mean, delta, note }, index) => (
                             <td key={axes[index]!.axis}>
-                              {rawValue(mean)}
+                              {formatMetricValue(axes[index]!.metric, mean)}
                               {baseline && (condition.id !== baseline.id || note) && (
                                 <small>
-                                  {delta === null ? note : `Baseline 대비 ${formatChange(delta)}`}
+                                  {delta === null
+                                    ? note
+                                    : `Baseline 대비 ${formatMetricValue(axes[index]!.metric, delta, "change")}`}
                                 </small>
                               )}
                             </td>
