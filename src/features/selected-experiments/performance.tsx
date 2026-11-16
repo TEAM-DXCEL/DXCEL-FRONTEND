@@ -13,7 +13,7 @@ import { RecordedMultiAxisView } from "@/features/recorded-comparison/multi-axis
 import {
   baselineName,
   datasetLabels,
-  rawValue,
+  formatMetricValue,
   recordedMetricName,
   scopeLabels,
   statusLabels,
@@ -29,7 +29,9 @@ export function SelectedPerformanceView({
 }) {
   const [dataset, setDataset] = useState(data.groups[0]?.condition.dataset ?? "");
   const [selectedIds, setSelectedIds] = useState(() => {
-    const first = data.groups[0]?.condition;
+    const first =
+      data.groups.find(({ condition }) => !condition.referenceOnly)?.condition ??
+      data.groups[0]?.condition;
     return first ? [first.id] : [];
   });
   const [baselineId, setBaselineId] = useState("");
@@ -57,10 +59,6 @@ export function SelectedPerformanceView({
   const pairEvidence = data.comparisons.filter(({ lhs, rhs }) =>
     selected.some(({ id }) => id === lhs || id === rhs),
   );
-  const baselineEvidence = data.baselineComparisons.filter(
-    ({ evaluation_group, baseline_id }) =>
-      baseline_id === baseline?.id && selected.some(({ id }) => id === evaluation_group),
-  );
 
   return (
     <ThemeScope theme="light" className="mb-section-gap">
@@ -73,7 +71,10 @@ export function SelectedPerformanceView({
             options={datasetOptions}
             onValueChange={(value) => {
               setDataset(value);
-              const first = data.groups.find(({ condition }) => condition.dataset === value);
+              const first =
+                data.groups.find(
+                  ({ condition }) => condition.dataset === value && !condition.referenceOnly,
+                ) ?? data.groups.find(({ condition }) => condition.dataset === value);
               setSelectedIds(first ? [first.condition.id] : []);
               setBaselineId("");
             }}
@@ -130,42 +131,49 @@ export function SelectedPerformanceView({
                     <legend className="px-control-inset pt-1 text-label text-foreground-muted">
                       {experimentId}
                     </legend>
-                    {options.map(({ id, condition }) => (
-                      <label
-                        key={id}
-                        data-selected={selectedIds.includes(id)}
-                        className={cx(
-                          selectOptionClasses,
-                          "relative cursor-pointer hover:bg-control-focus has-[:focus-visible]:bg-control-focus data-[selected=true]:bg-select-selected data-[selected=true]:text-select-selected-foreground",
-                        )}
-                      >
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          aria-label={`${experimentId} · ${condition}`}
-                          checked={selectedIds.includes(id)}
-                          onChange={({ currentTarget }) => {
-                            const checked = currentTarget.checked;
-                            setSelectedIds((ids) =>
-                              checked ? [...ids, id] : ids.filter((value) => value !== id),
-                            );
-                          }}
-                        />
-                        <span className="min-w-0 wrap-anywhere">{condition}</span>
-                        {selectedIds.includes(id) && (
-                          <svg
-                            className="size-icon-sm shrink-0"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            aria-hidden="true"
-                          >
-                            <path d="m5 12 4 4L19 6" />
-                          </svg>
-                        )}
-                      </label>
-                    ))}
+                    {options.map(
+                      ({ id, condition, label, referenceOnly, displayedGenerationN }) => (
+                        <label
+                          key={id}
+                          data-selected={selectedIds.includes(id)}
+                          className={cx(
+                            selectOptionClasses,
+                            "relative cursor-pointer hover:bg-control-focus has-[:focus-visible]:bg-control-focus data-[selected=true]:bg-select-selected data-[selected=true]:text-select-selected-foreground",
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            className="sr-only"
+                            aria-label={`${experimentId} · ${condition}`}
+                            checked={selectedIds.includes(id)}
+                            onChange={({ currentTarget }) => {
+                              const checked = currentTarget.checked;
+                              setSelectedIds((ids) =>
+                                checked ? [...ids, id] : ids.filter((value) => value !== id),
+                              );
+                            }}
+                          />
+                          <span className="min-w-0 wrap-anywhere">
+                            {label}
+                            {referenceOnly && " · 참고용"}
+                            {displayedGenerationN !== undefined &&
+                              ` · 생성 n=${displayedGenerationN}`}
+                          </span>
+                          {selectedIds.includes(id) && (
+                            <svg
+                              className="size-icon-sm shrink-0"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              aria-hidden="true"
+                            >
+                              <path d="m5 12 4 4L19 6" />
+                            </svg>
+                          )}
+                        </label>
+                      ),
+                    )}
                   </fieldset>
                 ))}
               </div>
@@ -222,7 +230,11 @@ export function SelectedPerformanceView({
             className="mt-control-inset rounded-control border-thin border-border p-control-inset"
           >
             <summary className="cursor-pointer text-label">
-              {group.condition.experimentId} · {group.condition.condition} · 지표와 누락 사유
+              {group.condition.experimentId} · {group.condition.label}
+              {group.condition.referenceOnly && " · 참고용"}
+              {group.condition.displayedGenerationN !== undefined &&
+                ` · 생성 n=${group.condition.displayedGenerationN}`}
+              {" · 지표와 누락 사유"}
             </summary>
             <div className={styles.archiveScroll}>
               <table className={styles.archiveTable}>
@@ -244,7 +256,8 @@ export function SelectedPerformanceView({
                           {recordedMetricName(entry)} · {scopeLabels[entry.reference_scope]}
                         </th>
                         <td>
-                          {rawValue(stat.mean)} ± {rawValue(stat.sampleSd)}
+                          {formatMetricValue(entry, stat.mean)} ±{" "}
+                          {formatMetricValue(entry, stat.sampleSd, "sd")}
                         </td>
                         <td>
                           {stat.n}/{group.condition.runIds.length}
@@ -257,10 +270,14 @@ export function SelectedPerformanceView({
                             return (
                               <div key={id}>
                                 원본 반복 {run?.repetition_index ?? "미확인"} ·{" "}
-                                {rawValue(reading?.value ?? null)}
+                                {formatMetricValue(entry, reading?.value ?? null)}
                                 {reading?.value == null &&
                                   reading &&
                                   ` · ${statusLabels[reading.state]} · ${reading.reason ?? "사유 미확인"}`}
+                                {reading?.evaluationCount != null &&
+                                  ` · 평가 추출 ${reading.evaluationCount}회`}
+                                {reading?.evaluationMissingReason &&
+                                  ` · ${reading.evaluationMissingReason}`}
                               </div>
                             );
                           })}
@@ -282,11 +299,30 @@ export function SelectedPerformanceView({
         <details className="mt-control-inset rounded-control border-thin border-border p-control-inset">
           <summary className="cursor-pointer text-label">비교 조건과 근거</summary>
           <p className="text-meta text-foreground-muted">
-            EXP-135는 비교 근거입니다. 통계적 유의성은 미평가입니다.
+            평균 차이는 기술 비교이며 통계적 유의성이나 DP 보장 강도를 뜻하지 않습니다.
           </p>
-          <pre className="overflow-auto text-caption">
-            {JSON.stringify({ 실험_비교: pairEvidence, Baseline_비교: baselineEvidence }, null, 2)}
-          </pre>
+          {baseline &&
+            selectedGroups.map(({ condition }) => {
+              const pair = condition.comparisonEvidence?.find(
+                ({ baselineId }) => baselineId === baseline.id,
+              );
+              return (
+                <div key={condition.id} className="mt-control-gap text-meta">
+                  <strong>
+                    {condition.experimentId} · {pair?.status ?? "비교 조건 확인 필요"}
+                  </strong>
+                  {condition.referenceOnly && <p>참고용 · 자동 개선 판정 제외</p>}
+                  {pair?.limits?.map((limit) => (
+                    <p key={limit}>{limit}</p>
+                  ))}
+                </div>
+              );
+            })}
+          {pairEvidence.length > 0 && (
+            <pre className="overflow-auto text-caption">
+              {JSON.stringify(pairEvidence, null, 2)}
+            </pre>
+          )}
         </details>
       </section>
     </ThemeScope>

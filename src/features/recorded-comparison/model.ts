@@ -64,6 +64,22 @@ export function previewValue(value: number | null) {
   return value === null ? "—" : String(Number(value.toPrecision(6)));
 }
 
+export function formatMetricValue(
+  metric: RecordedMetricDefinition,
+  value: number | null,
+  kind: "value" | "sd" | "change" = "value",
+) {
+  if (value === null) return "—";
+  if (
+    metric.statistic === "tpr_at_fpr" &&
+    (metric.unit === "fraction" || metric.unit === "proportion")
+  ) {
+    const scaled = Number((value * 100).toPrecision(6));
+    return `${kind === "change" && scaled > 0 ? "+" : ""}${scaled}${kind === "value" ? "%" : " pp"}`;
+  }
+  return kind === "change" ? formatChange(value) : previewValue(value);
+}
+
 export function improvement(metric: RecordedMetricDefinition, current: number, reference: number) {
   if (metric.direction === "closer_to_target" && metric.target === null) return null;
 
@@ -102,13 +118,19 @@ export function baselineName(baseline: RecordedBaseline) {
   return `${baseline.modelName} · ${baseline.setting} · ${baseline.sourceExperiment}`;
 }
 
-export function baselineComparisonNote(baseline: RecordedBaseline, key: string, dataset: string) {
+export function baselineComparisonNote(
+  baseline: RecordedBaseline,
+  key: string,
+  dataset: string,
+  evidence?: { baselineId: string; status: string; comparable?: boolean }[],
+) {
   if (baseline.excluded) return "주 비교 제외·참고용";
   if (baseline.dataset !== dataset) return "비교 데이터셋이 다름";
   const stat = baseline.metrics[key];
   if (stat?.mean == null)
     return stat ? (stat.missingReason ?? statusLabels[stat.status]) : "Baseline 지표 미측정";
-  return "비교 조건 확인 필요";
+  const pair = evidence?.find(({ baselineId }) => baselineId === baseline.id);
+  return pair?.comparable ? pair.status : "비교 조건 확인 필요";
 }
 
 export const datasetLabels: Record<string, string> = {
