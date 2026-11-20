@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { adaptSelectedDelta } from "./replacement";
+import { appendLocalAddition, localAdditionDirectory } from "./addition-local";
 import {
   localReplacementDirectory,
   readLocalReplacement,
@@ -15,7 +16,11 @@ export const readComparisonRelease = cache(async () => {
       readLocalReplacement("dashboard-baselines.json"),
       readLocalSelectedDelta(),
     ]);
-    return { source: "local", baseline, delta } as const;
+    return {
+      source: "local",
+      baseline,
+      delta: await appendLocalAddition(delta, baseline),
+    } as const;
   }
 
   const client = await createResearchClient();
@@ -31,8 +36,11 @@ export const readComparisonRelease = cache(async () => {
     throw new Error("Supabase 비교 데이터 형식이 올바르지 않습니다.");
   }
   return {
-    source: "supabase",
+    source: localAdditionDirectory() ? "local" : "supabase",
     baseline: data.baseline_catalog as unknown,
-    delta: adaptSelectedDelta(data.selected_delta),
+    delta: await appendLocalAddition(
+      adaptSelectedDelta(data.selected_delta),
+      data.baseline_catalog,
+    ),
   } as const;
 });

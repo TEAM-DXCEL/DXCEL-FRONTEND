@@ -17,6 +17,7 @@ import {
 import type { RecordedStat } from "@/features/recorded-comparison/loader";
 
 import type { ExperimentListRow } from "@/features/experiments/types";
+import { localAdditionDirectory } from "@/features/recorded-comparison/addition-local";
 
 type SelectedEvaluations = {
   experiments: {
@@ -35,6 +36,8 @@ type SelectedEvaluations = {
     display_name?: string;
     displayed_generation_n?: number;
     reference_only?: boolean;
+    primary_condition?: boolean;
+    include_in_overview?: boolean;
     decoder_id?: string | null;
     generation_condition_id?: string;
     derived_condition_id?: string;
@@ -52,7 +55,12 @@ type SelectedEvaluations = {
     experiment_id: string;
     dataset: string;
     condition: string;
-    source_run_id: string;
+    source_run_id: string | null;
+    source_run_id_missing_reason?: string | null;
+    parent_dp_generation_id?: string;
+    parent_generation_id?: string | null;
+    counts_as_new_dp_generation?: boolean;
+    post_processing_only?: boolean;
     repetition_index: number;
     generation_status: string;
     metrics: {
@@ -84,12 +92,19 @@ type ArchivedExperiment = Pick<
   | "official_baseline_comparison_pairs"
 > & { experiment: SelectedEvaluations["experiments"][number] };
 
+function independentParentCount(runs: SelectedEvaluations["generation_runs"]) {
+  if (!runs.length || !runs.every((run) => run.counts_as_new_dp_generation !== undefined))
+    return undefined;
+  return new Set(runs.map((run) => run.parent_dp_generation_id)).size;
+}
+
 function mergeSelectedDelta(
   legacy: SelectedEvaluations,
   delta: ReturnType<typeof adaptSelectedDelta>,
 ): SelectedEvaluations {
-  const excludedGroupIds = new Set(
-    legacy.evaluation_groups
+  const excludedGroupIds = new Set([
+    ...(legacy.excludedGroupIds ?? []),
+    ...legacy.evaluation_groups
       .filter((group) =>
         delta.excluded_existing_conditions.some(
           (rule) =>
@@ -97,10 +112,11 @@ function mergeSelectedDelta(
         ),
       )
       .map(({ id }) => id),
-  );
-  const declared = new Set(
-    delta.excluded_existing_conditions.flatMap(({ source_group_ids }) => source_group_ids),
-  );
+  ]);
+  const declared = new Set([
+    ...(legacy.excludedGroupIds ?? []),
+    ...delta.excluded_existing_conditions.flatMap(({ source_group_ids }) => source_group_ids),
+  ]);
   if (
     declared.size !== excludedGroupIds.size ||
     [...declared].some((id) => !excludedGroupIds.has(id))
@@ -176,7 +192,7 @@ const loadSelectedEvaluations = cache(async (): Promise<SelectedEvaluations | nu
   if (!client) return null;
 
   const [{ data, error }, release] = await Promise.all([
-    client.rpc("read_selected_evaluations"),
+    client.rpc("read_selected_evaluations", {}, { get: true }),
     readComparisonRelease(),
   ]);
   if (error) throw new Error("선정 실험 결과를 불러올 수 없습니다.");
@@ -242,7 +258,10 @@ export async function loadSelectedPerformance() {
               sampleSd: summary.sample_sd,
               n: summary.n_valid,
               statuses: [...new Set(entries.flatMap((entry) => (entry ? [entry.state] : [])))],
-              comparisonKey: group.display_name && !group.reference_only ? group.id : null,
+              comparisonKey:
+                group.display_name && !group.reference_only && group.primary_condition !== false
+                  ? group.id
+                  : null,
               summarySource: null,
               summaryKey: null,
             } satisfies RecordedStat,
@@ -259,6 +278,9 @@ export async function loadSelectedPerformance() {
           label: group.display_name ?? group.condition,
           displayedGenerationN: group.displayed_generation_n,
           referenceOnly: group.reference_only,
+          primaryCondition: group.primary_condition,
+          includeInOverview: group.include_in_overview,
+          independentParentCount: independentParentCount(runs),
           comparisonEvidence: data.official_baseline_comparison_pairs
             .filter((pair) => pair.evaluation_group === group.id)
             .map(({ baseline_id, status, comparable, limits }) => ({
@@ -277,6 +299,8 @@ export async function loadSelectedPerformance() {
               생성_arm: group.generation_condition_id,
               decoder: group.decoder_id,
               표_별칭: group.derived_condition_id,
+              주_조건: group.primary_condition,
+              Overview_포함: group.include_in_overview,
               ...group.comparison_conditions,
             }
           : group.comparison_conditions,
@@ -289,6 +313,18 @@ export async function loadSelectedPerformance() {
   if (new Set(runIds).size !== runIds.length) throw new Error("중복된 생성 실행이 있습니다.");
   return {
     groups,
+    generationCounts: data.experiments.flatMap(({ id }) => {
+      const runs = data.generation_runs.filter((run) => run.experiment_id === id);
+      const independentParents = independentParentCount(runs);
+      if (independentParents === undefined) return [];
+      return [
+        {
+          experimentId: id,
+          independentParents,
+          outputs: runs.length,
+        },
+      ];
+    }),
     metrics: data.metric_definitions.map((metric): RecordedMetricDefinition => ({
       key: metric.key,
       display_name: metric.display_name,
@@ -310,6 +346,11 @@ export async function loadSelectedPerformance() {
           id,
           {
             source_run_id: run.source_run_id,
+            source_run_id_missing_reason: run.source_run_id_missing_reason,
+            parent_dp_generation_id: run.parent_dp_generation_id,
+            parent_generation_id: run.parent_generation_id,
+            counts_as_new_dp_generation: run.counts_as_new_dp_generation,
+            post_processing_only: run.post_processing_only,
             repetition_index: run.repetition_index,
             metrics: run.metrics.map(
               ({ key, value, state, reason, evaluationCount, evaluationMissingReason }) => ({
@@ -343,6 +384,8 @@ export async function loadSelectedExperimentRows(): Promise<ExperimentListRow[]>
     .map(({ id, flow, performer }) => {
       const groups = data.evaluation_groups.filter((group) => group.experiment_id === id);
       const runIds = new Set(groups.flatMap((group) => group.runs));
+      const outputRuns = [...runIds].map((id) => runsById.get(id)!);
+      const independentParents = independentParentCount(outputRuns);
       const allPassed =
         runIds.size > 0 &&
         [...runIds].every((runId) => {
@@ -357,15 +400,26 @@ export async function loadSelectedExperimentRows(): Promise<ExperimentListRow[]>
         owner: performer ?? null,
         updatedAt: null,
         status: allPassed ? "succeeded" : "unknown",
-        runCount: runIds.size,
+        runCount: independentParents ?? runIds.size,
         reusedCount: null,
         version: null,
         changes: null,
         searchNote: groups.map(({ dataset, condition }) => `${dataset} ${condition}`).join(" "),
         details: [
-          ["출처", localReplacementDirectory() ? "실험 보관 자료 · 로컬" : "선정 실험 · Supabase"],
+          [
+            "출처",
+            localReplacementDirectory() || localAdditionDirectory()
+              ? "운영 기록과 로컬 추가 데이터"
+              : "선정 실험 · Supabase",
+          ],
           ["이전 실험", flow.direct_previous_experiment],
           ["평가 그룹", `${groups.length}개`],
+          ...(independentParents !== undefined
+            ? [
+                ["독립 DP 부모", `${independentParents}개`] as const,
+                ["복원 출력·평가", `${outputRuns.length}개`] as const,
+              ]
+            : []),
         ],
       };
     });
