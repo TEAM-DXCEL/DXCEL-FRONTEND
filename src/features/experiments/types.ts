@@ -25,17 +25,6 @@ export interface ExperimentRevision {
   createdAt: string;
 }
 
-export interface RunGroup {
-  id: string;
-  projectId: string;
-  experimentId: string;
-  revisionId: string;
-  comparisonContextId: string;
-  expectedRepetitions: number;
-  state: "draft" | "finalized";
-  finalizedAt: string | null;
-}
-
 export interface Run {
   id: string;
   projectId: string;
@@ -52,13 +41,6 @@ export interface Run {
   startedAt: string | null;
   finishedAt: string | null;
 }
-
-export type RunMetric = {
-  runId: string;
-  metricDefinitionId: string;
-} & (
-  { state: "measured"; value: number } | { state: "missing" | "error"; value: null; reason: string }
-);
 
 export interface ExperimentListItem {
   experiment: Experiment;
