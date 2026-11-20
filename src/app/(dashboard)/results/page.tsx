@@ -46,10 +46,13 @@ export default async function ResultsPage({
       .map((entry) => [entry.dataset, entry]),
   );
   const canCompareToAim = (condition: SelectedPerformance["groups"][number]["condition"]) => {
-    const aim = aimByDataset.get(condition.dataset);
-    const pair = condition.comparisonEvidence?.find(({ baselineId }) => baselineId === aim?.id);
+    const baseline = aimByDataset.get(condition.dataset);
+    const pair = condition.comparisonEvidence?.find(
+      ({ baselineId }) => baselineId === baseline?.id,
+    );
     return (
       !condition.referenceOnly &&
+      condition.primaryCondition !== false &&
       (pair?.comparable ?? pair?.status === "comparable_with_explicit_historical_version_limit")
     );
   };
@@ -82,6 +85,12 @@ export default async function ResultsPage({
     );
   return (
     <DashboardPage title="실험 결과표">
+      {selected?.generationCounts.map((counts) => (
+        <p key={counts.experimentId} className="mb-control-gap text-caption text-foreground-muted">
+          {counts.experimentId} · 독립 DP 부모 {counts.independentParents}개 · 복원 출력·평가{" "}
+          {counts.outputs}개 · 조건별 n은 공유 부모 기준
+        </p>
+      ))}
       <MetricComparison
         baselines={baselines.map(
           ({ dataset, id, modelName, model, excluded, metrics, comparisonLimits }) => ({
@@ -97,7 +106,6 @@ export default async function ResultsPage({
         experiments={groups.map(({ condition, summaries }) => ({
           dataset: condition.dataset,
           label: `${condition.experimentId} · ${condition.label}${condition.referenceOnly ? " · 참고용" : ""}`,
-          comparableToAim: canCompareToAim(condition),
           comparisonNote: condition.referenceOnly
             ? "참고용"
             : (condition.comparisonEvidence?.find(

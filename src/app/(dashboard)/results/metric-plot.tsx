@@ -12,7 +12,6 @@ export type OverviewSeries = {
   model?: string;
   excluded?: boolean;
   reference?: boolean;
-  comparableToAim?: boolean;
   comparisonNote?: string;
   metrics: Record<string, Reading>;
 };
@@ -24,8 +23,9 @@ export const models = [
   { key: "experiment", label: "선택 실험", symbol: "◆" },
 ] as const;
 
-const aimIndex = models.findIndex(({ key }) => key === "aim");
 const experimentIndex = models.findIndex(({ key }) => key === "experiment");
+const aimIndex = models.findIndex(({ key }) => key === "aim");
+const baselineIndices = models.flatMap(({ key }, index) => (key === "experiment" ? [] : [index]));
 
 export function MetricPlot({
   metric,
@@ -37,13 +37,29 @@ export function MetricPlot({
   range: readonly [number, number];
 }) {
   const readings = series.map((entry) => entry?.metrics[metric.key]);
-  const aim = readings[aimIndex]?.mean;
+  const reference = readings[aimIndex]?.mean;
   const current = readings[experimentIndex]?.mean;
-  const change =
-    series[experimentIndex]?.comparableToAim && aim != null && current != null
-      ? improvement(metric, current, aim)
+  const baselineReadings = baselineIndices.map((index) =>
+    series[index]?.excluded ? undefined : readings[index]?.mean,
+  );
+  const changes =
+    current != null && baselineReadings.every((value) => value != null)
+      ? baselineReadings.map((value) => improvement(metric, current, value!))
       : null;
-  const tone = change === null || change === 0 ? undefined : change > 0 ? "better" : "worse";
+  const tone = changes?.every((change) => change != null && change > 0)
+    ? "better"
+    : changes?.some((change) => change != null && change < 0)
+      ? "worse"
+      : undefined;
+  const experiment = series[experimentIndex];
+  const comparisonStatus =
+    current == null
+      ? "실험 미측정"
+      : baselineReadings.some((value) => value == null)
+        ? "Baseline 미측정 · 세 기준 비교 불가"
+        : tone === "better"
+          ? `세 Baseline 모두보다 수치상 개선${experiment?.comparisonNote ? ` · ${experiment.comparisonNote}` : ""}`
+          : (experiment?.comparisonNote ?? "세 Baseline 모두보다 개선되지 않음");
   const position = (value: number) => ((high - value) / (high - low)) * 100;
   const format = (value: number) =>
     metric.statistic === "tpr_at_fpr"
@@ -51,20 +67,26 @@ export function MetricPlot({
       : String(Number(value.toPrecision(4)));
 
   return (
-    <div className={styles.plot} data-tone={tone}>
+    <div
+      className={styles.plot}
+      data-tone={tone}
+      title={`초록 테두리: AIM·Tab-PE·PrivPGD 모두보다 원본 평균이 좋은 방향 · ${comparisonStatus}`}
+    >
       {tone && (
         <span
           className={styles.change}
-          aria-label={tone === "better" ? "AIM 대비 개선" : "AIM 대비 저하"}
+          aria-label={
+            tone === "better" ? "세 Baseline 모두보다 수치상 개선" : "일부 Baseline보다 수치상 저하"
+          }
         >
           {tone === "better" ? "↑" : "↓"}
         </span>
       )}
       <div className={styles.plotArea}>
-        {aim != null && (
+        {reference != null && (
           <span
-            className={styles.aimLine}
-            style={{ top: `${position(aim)}%` }}
+            className={styles.baselineLine}
+            style={{ top: `${position(reference)}%` }}
             aria-hidden="true"
           />
         )}
