@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDismissibleDetails } from "@/hooks/use-dismissible-details";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { ThemeScope } from "@/components/ui/theme-scope";
@@ -169,6 +170,7 @@ export function RecordedComparisonDashboard({
   liveError?: boolean;
   catalog: Awaited<ReturnType<typeof loadBaselineCatalog>>;
 }) {
+  const conditionMenuRef = useDismissibleDetails();
   const conditions = liveRun ? [liveRun.condition, ...data.conditions] : data.conditions;
   const baselineCatalog = catalog.status === "ready" ? catalog.data : undefined;
   const datasets = [
@@ -371,6 +373,7 @@ export function RecordedComparisonDashboard({
             <div className="grid gap-1">
               <span className="text-label">비교할 실험 조건</span>
               <details
+                ref={conditionMenuRef}
                 key={filters.dataset}
                 className="min-w-0 rounded-control border-thin border-border"
               >

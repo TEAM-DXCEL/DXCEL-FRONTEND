@@ -39,6 +39,22 @@ DXCEL_LOCAL_REPLACEMENT_DIR=.local/results/dashboard_export/replacement_audit_20
 `/experiments`는 선정 비교 제외 조건의 원래 실험 이력도 유지합니다.
 로컬 파일은 Git에서 제외하며 원격 등록 실행을 조회하지 않습니다.
 
+### EXP-165 추가 데이터 로컬 확인
+
+전달받은 네 파일을 `.local/results/dashboard_export/exp165_addition_20261120/`에
+보존하고 다음 명령으로 운영 기록 위에 추가해 확인합니다.
+
+```bash
+DXCEL_LOCAL_SELECTED_DELTA_DIR=.local/results/dashboard_export/exp165_addition_20261120 pnpm dev --port 3017
+```
+
+이 환경 변수는 개발 서버에서만 적용됩니다. 파일 해시와 기존 Baseline 참조를 검증한 뒤
+EXP-165를 추가하며, 기존 제외 이력은 유지합니다. 서버용 Supabase 환경 변수도 필요합니다.
+EXP-165의 독립 DP 부모는 35개이고, 두 decoder의 복원 출력·평가는 70개입니다.
+보조 PT_MID는 참고용이며 Overview의 자동 개선 판정과 목록에서 제외합니다.
+운영 DB에 등록한 이후에는 위 환경 변수를 설정하지 않고 `pnpm dev`로 실행합니다.
+이미 등록한 실험을 로컬 delta로 다시 추가하면 중복 방지를 위해 오류를 표시합니다.
+
 ## 팀 공유 서버
 
 ```bash

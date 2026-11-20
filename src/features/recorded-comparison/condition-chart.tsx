@@ -16,6 +16,9 @@ export type ComparisonCondition = Omit<RecordedCondition, "phase"> & {
   phase: number | null;
   displayedGenerationN?: number;
   referenceOnly?: boolean;
+  primaryCondition?: boolean;
+  includeInOverview?: boolean;
+  independentParentCount?: number;
   comparisonEvidence?: {
     baselineId: string;
     status: string;
@@ -46,7 +49,7 @@ export function ConditionChart({
   runs: Record<
     string,
     {
-      source_run_id: RecordedDataset["runs"][string]["source_run_id"];
+      source_run_id: string | null;
       metrics: readonly Pick<RecordedDataset["runs"][string]["metrics"][number], "key" | "value">[];
     }
   >;
@@ -92,7 +95,9 @@ export function ConditionChart({
         return value == null ? [] : [{ id, label: id, value }];
       }
       const measure = run.metrics.find(({ key }) => key === metric.key);
-      return measure?.value == null ? [] : [{ id, label: run.source_run_id, value: measure.value }];
+      return measure?.value == null
+        ? []
+        : [{ id, label: run.source_run_id ?? id, value: measure.value }];
     }),
   }));
   if (baseline) {

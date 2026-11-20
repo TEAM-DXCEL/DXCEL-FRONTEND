@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { DashboardPage } from "@/components/layout/dashboard-page";
 import { ExperimentList, ExperimentListLoading } from "@/features/experiments/experiment-list";
@@ -28,16 +27,6 @@ export default async function ExperimentsPage() {
     <DashboardPage title="실험" description="실험별 설계와 생성 실행 기록을 확인합니다.">
       {result.status === "ready" || result.status === "disabled" || rows.length > 0 ? (
         <Suspense fallback={<ExperimentListLoading />}>
-          {selectedRows.length > 0 && (
-            <nav
-              aria-label="선정 실험 바로가기"
-              className="mb-control-inset flex gap-control-inset text-label"
-            >
-              <Link className="text-link underline" href="/compare#selected-performance">
-                선정 실험 비교
-              </Link>
-            </nav>
-          )}
           <ExperimentList rows={result.status === "disabled" ? undefined : rows} />
         </Suspense>
       ) : (

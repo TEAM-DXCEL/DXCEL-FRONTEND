@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDismissibleDetails } from "@/hooks/use-dismissible-details";
 import { Button } from "@/components/ui/button";
 import { controlClasses, controlSizes } from "@/components/ui/field";
 import { cx } from "@/lib/cx";
@@ -27,6 +28,7 @@ export function SelectedPerformanceView({
   data: SelectedPerformance;
   baselines: RecordedBaseline[];
 }) {
+  const conditionMenuRef = useDismissibleDetails();
   const [dataset, setDataset] = useState(data.groups[0]?.condition.dataset ?? "");
   const [selectedIds, setSelectedIds] = useState(() => {
     const first =
@@ -64,6 +66,12 @@ export function SelectedPerformanceView({
     <ThemeScope theme="light" className="mb-section-gap">
       <section id="selected-performance" className={`${styles.recordedPanel} scroll-mt-header`}>
         <h2 className="text-heading-sm">선정 실험 성능 비교</h2>
+        {data.generationCounts.map((counts) => (
+          <p key={counts.experimentId} className="text-caption text-foreground-muted">
+            {counts.experimentId} · 독립 DP 부모 {counts.independentParents}개 · 복원 출력·평가{" "}
+            {counts.outputs}개 · 조건별 n은 공유 부모 기준
+          </p>
+        ))}
         <div className="my-control-inset grid gap-control-inset desktop:grid-cols-2">
           <Select
             label="데이터셋"
@@ -81,7 +89,7 @@ export function SelectedPerformanceView({
           />
           <div className="grid min-w-0 content-start gap-control-gap">
             <span className="text-label">비교할 실험 조건</span>
-            <details key={dataset} className="group relative min-w-0">
+            <details ref={conditionMenuRef} key={dataset} className="group relative min-w-0">
               <summary
                 aria-label={`비교할 실험 조건 · ${selected.length}개 선택`}
                 className={cx(
@@ -234,6 +242,8 @@ export function SelectedPerformanceView({
               {group.condition.referenceOnly && " · 참고용"}
               {group.condition.displayedGenerationN !== undefined &&
                 ` · 생성 n=${group.condition.displayedGenerationN}`}
+              {group.condition.independentParentCount !== undefined &&
+                ` · 독립 DP 부모 ${group.condition.independentParentCount}개`}
               {" · 지표와 누락 사유"}
             </summary>
             <div className={styles.archiveScroll}>
@@ -278,6 +288,30 @@ export function SelectedPerformanceView({
                                   ` · 평가 추출 ${reading.evaluationCount}회`}
                                 {reading?.evaluationMissingReason &&
                                   ` · ${reading.evaluationMissingReason}`}
+                                {run?.counts_as_new_dp_generation !== undefined && (
+                                  <details className="text-caption text-foreground-muted">
+                                    <summary className="cursor-pointer">생성 출처와 부모</summary>
+                                    <p className="break-all">실행 ID · {id}</p>
+                                    <p>원본 생성 ID · {run.source_run_id ?? "미확인"}</p>
+                                    {run.source_run_id_missing_reason && (
+                                      <p>{run.source_run_id_missing_reason}</p>
+                                    )}
+                                    <p className="break-all">
+                                      DP 부모 ID · {run.parent_dp_generation_id}
+                                    </p>
+                                    <p>
+                                      신규 DP 생성 ·{" "}
+                                      {run.counts_as_new_dp_generation
+                                        ? "예"
+                                        : "아니오 · 동일 부모 후처리"}
+                                    </p>
+                                    {run.parent_generation_id && (
+                                      <p className="break-all">
+                                        부모 출력 ID · {run.parent_generation_id}
+                                      </p>
+                                    )}
+                                  </details>
+                                )}
                               </div>
                             );
                           })}

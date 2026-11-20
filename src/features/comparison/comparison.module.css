@@ -20,14 +20,6 @@
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-tight);
 }
-.titleSlash {
-  color: var(--primary);
-  font-weight: var(--font-weight-regular);
-}
-.titleEnglish {
-  color: var(--foreground-subtle);
-  font-weight: var(--font-weight-regular);
-}
 .demoTag {
   display: inline-flex;
   align-items: center;
@@ -138,15 +130,6 @@
 .pathToggle:focus-visible {
   background: var(--surface-muted);
 }
-.toggleIndicator {
-  width: var(--spacing-control-gap);
-  height: var(--spacing-control-gap);
-  border-radius: var(--radius-full);
-  background: var(--chart-neutral);
-}
-.pathToggle[aria-pressed="true"] .toggleIndicator {
-  background: var(--color-green-500);
-}
 .primaryChart {
   display: block;
   width: 100%;
@@ -225,17 +208,13 @@
   background: var(--comparison-point-worse);
 }
 .baselineSwatch,
-.familyA,
-.familyB {
+.familyA {
   display: inline-block;
   flex-shrink: 0;
   width: var(--spacing-control-gap);
   height: var(--spacing-control-gap);
   border-radius: var(--radius-full);
   background: var(--color-green-500);
-}
-.familyB {
-  background: var(--color-orange-500);
 }
 .baselineSwatch {
   background: var(--chart-baseline);
@@ -327,71 +306,11 @@
   font-family: var(--font-mono);
   font-weight: var(--font-weight-medium);
 }
-.changeNote {
-  margin-top: var(--spacing-panel-gap);
-  padding-top: var(--spacing-control-inset);
-  border-top: var(--border-width-default) solid var(--border);
-}
-.previousLabel {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-control-gap);
-  margin-top: var(--spacing-control-inset);
-  font: var(--text-caption) var(--font-mono);
-}
-.previousLabel > span {
-  color: var(--foreground-subtle);
-}
-.changeNote > p:last-child {
-  margin-top: var(--spacing-control-gap);
-  font-size: var(--text-caption);
-  line-height: var(--text-body--line-height);
-  color: var(--foreground-muted);
-}
 .inspectorFootnote {
   margin-top: var(--spacing-control-inset);
   font-size: var(--text-caption);
   line-height: var(--text-caption--line-height);
   color: var(--foreground-subtle);
-}
-.experimentStrip {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-control-inset);
-  padding: var(--spacing-control-inset) var(--spacing-card-inset);
-  border-top: var(--border-width-default) solid var(--border);
-  border-bottom: var(--border-width-default) solid var(--border);
-}
-.experimentStrip > span {
-  flex-shrink: 0;
-  font-size: var(--text-caption);
-  color: var(--foreground-subtle);
-}
-.experimentStrip > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-control-gap);
-}
-.experimentChip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-control-gap);
-  min-height: var(--spacing-control-sm);
-  padding: var(--spacing) var(--spacing-control-gap);
-  font: var(--text-caption) var(--font-mono);
-  color: var(--foreground-muted);
-  cursor: pointer;
-  border-radius: var(--radius-control);
-  outline: none;
-}
-.experimentChip:hover,
-.experimentChip:focus-visible {
-  background: var(--surface-muted);
-}
-.experimentChip[aria-pressed="true"] {
-  background: var(--foreground);
-  color: var(--surface);
 }
 .analysisBar {
   display: flex;
@@ -485,38 +404,6 @@
 .valuesFooter > button:focus-visible {
   background: var(--surface-muted);
 }
-.valuesTable {
-  overflow-x: auto;
-  padding: 0 var(--spacing-card-inset) var(--spacing-card-inset);
-}
-.valuesTable table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font: var(--text-caption) var(--font-mono);
-}
-.valuesTable th,
-.valuesTable td {
-  padding: var(--spacing-control-inset);
-  border-bottom: var(--border-width-default) solid var(--border);
-  white-space: nowrap;
-}
-.valuesTable thead {
-  color: var(--foreground-subtle);
-}
-.valuesTable tr[data-selected="true"] {
-  background: var(--primary-subtle);
-}
-.valuesTable button {
-  padding: var(--spacing);
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  outline: none;
-}
-.valuesTable button:focus-visible,
-.valuesTable button:hover {
-  background: var(--surface-hover);
-}
 @media (min-width: 1440px) {
   .mainGrid {
     grid-template-columns: minmax(0, 1fr) 19rem;
@@ -529,12 +416,6 @@
   .legend .legendHint {
     margin-left: 0;
     flex-basis: 100%;
-  }
-  .titleEnglish {
-    display: none;
-  }
-  .titleSlash {
-    display: none;
   }
 }
 @media (max-width: 800px) {
@@ -554,10 +435,6 @@
   }
   .contextNote {
     text-align: left;
-  }
-  .experimentStrip {
-    align-items: flex-start;
-    flex-direction: column;
   }
 }
 
@@ -622,42 +499,6 @@
   stroke: var(--chart-grid);
   stroke-width: var(--chart-grid-width);
 }
-.statsStrip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-bottom: var(--border-width-default) solid var(--border);
-}
-.statsStrip > div {
-  padding: var(--spacing-card-inset);
-  border-right: var(--border-width-default) solid var(--border);
-}
-.statsStrip > div:last-child {
-  border-right: 0;
-}
-.statsStrip p {
-  font-size: var(--text-caption);
-  color: var(--foreground-subtle);
-}
-.statIndex {
-  margin-right: var(--spacing-control-gap);
-  font-family: var(--font-mono);
-  color: var(--foreground-subtle);
-}
-.statsStrip strong {
-  display: block;
-  margin: var(--spacing-control-gap) 0;
-  font: var(--font-weight-medium) var(--text-metric) var(--font-mono);
-  letter-spacing: var(--tracking-tight);
-}
-.statsStrip small {
-  margin-left: var(--spacing-control-gap);
-  font: var(--text-caption) var(--font-sans);
-  color: var(--foreground-subtle);
-}
-.statsStrip > div > span {
-  font-size: var(--text-caption);
-  color: var(--foreground-subtle);
-}
 .chartMode {
   display: flex;
   flex-shrink: 0;
@@ -680,13 +521,6 @@
 .chartMode button:hover,
 .chartMode button:focus-visible {
   text-decoration: underline;
-}
-.chartSubrow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-control-gap);
-  margin-top: var(--spacing-control-gap);
 }
 .pathToggle:disabled {
   opacity: 0.5;
@@ -1035,16 +869,8 @@
 .archiveExperiment span {
   color: var(--foreground-subtle);
 }
-.archiveExperiment:focus-visible,
-.parentLink:focus-visible {
+.archiveExperiment:focus-visible {
   background: var(--surface-hover);
-}
-.parentLink {
-  color: var(--link);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  outline: none;
-  border-radius: var(--radius-control);
 }
 .goalTag {
   padding: var(--spacing) var(--spacing-control-gap);
@@ -1083,15 +909,8 @@
   }
 }
 @media (max-width: 800px) {
-  .statsStrip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .pageHeading h1 {
     font-size: var(--text-heading-md);
-  }
-  .chartSubrow {
-    align-items: flex-start;
-    flex-direction: column;
   }
   .lineageFlow {
     overflow-x: auto;
@@ -1099,34 +918,6 @@
   .lineageFlow > div {
     min-width: 8rem;
   }
-}
-.referenceSwitch {
-  display: flex;
-  gap: var(--spacing);
-  margin-top: var(--spacing-control-inset);
-  padding: var(--spacing);
-  background: var(--surface);
-  border-radius: var(--radius-control);
-}
-.referenceSwitch button {
-  flex: 1;
-  min-height: var(--spacing-control-sm);
-  font-size: var(--text-caption);
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  outline: none;
-}
-.referenceSwitch button[aria-pressed="true"] {
-  background: var(--foreground);
-  color: var(--surface);
-}
-.referenceSwitch button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-.referenceSwitch button:hover,
-.referenceSwitch button:focus-visible {
-  text-decoration: underline;
 }
 .panelHeading h2 {
   scroll-margin-top: calc(var(--spacing-header) + var(--spacing-control-inset));

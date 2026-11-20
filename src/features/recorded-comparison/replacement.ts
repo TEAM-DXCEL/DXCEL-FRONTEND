@@ -1,3 +1,5 @@
+import { appendSelectedDelta } from "./addition";
+import { checkSummary, indexRuns, validateSelectedGroups } from "./selected-validation";
 import type { BaselineCatalog, BaselineStat } from "./baseline-loader";
 import type { RecordedMetricDefinition } from "./model";
 import type { SourceMetric } from "./schema";
@@ -32,7 +34,11 @@ type Run = {
   dataset: string;
   condition: string;
   repetition_index: number;
-  source_run_id: string;
+  source_run_id: string | null;
+  source_run_id_missing_reason?: string | null;
+  parent_generation_id?: string | null;
+  counts_as_new_dp_generation?: boolean;
+  post_processing_only?: boolean;
   parent_dp_generation_id: string;
   generation_status: string;
   synthetic_rows: number;
@@ -47,6 +53,7 @@ type ReplacementPair = {
   dataset: string;
   status: string;
   directly_comparable: boolean;
+  eligible_for_automatic_comparison?: boolean;
   conditions_checked: Record<string, boolean>;
   metric_scope_must_match: boolean;
   comparison_limits: string[];
@@ -68,6 +75,8 @@ type Group = {
   generation_n_by_metric: Record<string, number>;
   decoder_id: string | null;
   reference_only: boolean;
+  primary_condition?: boolean;
+  include_in_overview?: boolean;
   official_baseline: boolean;
   summaries: Summary[];
   comparison_conditions: {
@@ -93,7 +102,7 @@ type Bundle = {
   metric_definitions: RecordedMetricDefinition[];
 };
 
-type SelectedDelta = Bundle & {
+export type SelectedDelta = Bundle & {
   baseline_catalog_ref: string;
   baseline_groups: unknown[];
   experiments: { id: string; type: string; display_name: string }[];
@@ -133,6 +142,8 @@ export function replacementStatus(status: MetricStatus): SourceMetric["status"] 
 export function isDirectReplacementPair(pair: ReplacementPair) {
   return (
     pair.directly_comparable === true &&
+    pair.eligible_for_automatic_comparison !== false &&
+    pair.status !== "비교 조건 확인 필요" &&
     pair.metric_scope_must_match === true &&
     [
       "same_dataset",
@@ -157,48 +168,7 @@ export function replacementPairLimits({
     : [...comparison_limits, ...missing_reasons];
 }
 
-function indexRuns(group: Group, runs: Run[]) {
-  requireData(
-    runs.length === group.displayed_generation_n &&
-      new Set(runs.map((run) => run.parent_dp_generation_id)).size === runs.length &&
-      new Set(runs.map((run) => run.repetition_index)).size === runs.length &&
-      runs.every(
-        (run) =>
-          run.dataset === group.dataset &&
-          run.experiment_id === group.experiment_id &&
-          run.condition === group.condition,
-      ),
-    `생성 반복이 일치하지 않습니다 (${group.id}).`,
-  );
-  return new Map(
-    runs.map((run) => [run.id, new Map(run.metrics.map((metric) => [metric.key, metric]))]),
-  );
-}
-
-function checkSummary(group: Group, summary: Summary, runs: ReturnType<typeof indexRuns>) {
-  const values = summary.generation_values;
-  requireData(
-    values.length === runs.size &&
-      new Set(values.map((reading) => reading.generation_id)).size === runs.size &&
-      values.every(
-        ({ generation_id, value }) => runs.get(generation_id)?.get(summary.key)?.value === value,
-      ) &&
-      values.filter(({ value }) => value !== null && Number.isFinite(value)).length ===
-        summary.n_valid &&
-      summary.n_valid === group.generation_n_by_metric[summary.key] &&
-      summary.n_expected === group.displayed_generation_n &&
-      (summary.mean === null
-        ? summary.n_valid === 0
-        : summary.n_valid > 0 && Number.isFinite(summary.mean)) &&
-      (summary.sample_sd === null
-        ? summary.n_valid < 2
-        : summary.n_valid >= 2 && Number.isFinite(summary.sample_sd)) &&
-      (summary.mean !== null || summary.missing_reason),
-    `요약 또는 누락 사유가 원본 반복과 다릅니다 (${group.id}/${summary.key}).`,
-  );
-}
-
-export function adaptSelectedDelta(input: unknown) {
+function adaptBaseSelectedDelta(input: unknown) {
   const source = parseBundle<SelectedDelta>(input, "selected_experiments_delta");
   requireData(
     source.baseline_catalog_ref === "dashboard-baselines.json" &&
@@ -246,14 +216,8 @@ export function adaptSelectedDelta(input: unknown) {
             group.derived_condition_id === "AMIX_UNIF")),
       `선정 실험 분류 또는 조건 오류 (${group.id}).`,
     );
-    const members = group.runs.map((id) => {
-      const run = runs.get(id);
-      requireData(run, `생성 실행 누락 (${id}).`);
-      return run;
-    });
-    const indexed = indexRuns(group, members);
-    for (const summary of group.summaries) checkSummary(group, summary, indexed);
   }
+  validateSelectedGroups(source);
   const expectedExclusions = new Set([
     "EXP-131/AIM_QBIN",
     "EXP-132/AIM_ATOM_QBIN",
@@ -273,6 +237,40 @@ export function adaptSelectedDelta(input: unknown) {
     "지정한 여섯 조건만 선정 비교에서 제외할 수 있습니다.",
   );
   return source;
+}
+
+export function adaptSelectedDelta(input: unknown) {
+  const source = parseBundle<SelectedDelta>(input, "selected_experiments_delta");
+  if (!source.experiments.some(({ id }) => id === "EXP-165")) return adaptBaseSelectedDelta(source);
+
+  const addedGroupIds = new Set(
+    source.evaluation_groups
+      .filter(({ experiment_id }) => experiment_id === "EXP-165")
+      .map(({ id }) => id),
+  );
+  const base = adaptBaseSelectedDelta({
+    ...source,
+    experiments: source.experiments.filter(({ id }) => id !== "EXP-165"),
+    evaluation_groups: source.evaluation_groups.filter(({ id }) => !addedGroupIds.has(id)),
+    generation_runs: source.generation_runs.filter(
+      ({ experiment_id }) => experiment_id !== "EXP-165",
+    ),
+    official_baseline_comparison_pairs: source.official_baseline_comparison_pairs.filter(
+      ({ evaluation_group }) => !addedGroupIds.has(evaluation_group),
+    ),
+  });
+  return appendSelectedDelta(base, {
+    ...source,
+    experiments: source.experiments.filter(({ id }) => id === "EXP-165"),
+    evaluation_groups: source.evaluation_groups.filter(({ id }) => addedGroupIds.has(id)),
+    generation_runs: source.generation_runs.filter(
+      ({ experiment_id }) => experiment_id === "EXP-165",
+    ),
+    official_baseline_comparison_pairs: source.official_baseline_comparison_pairs.filter(
+      ({ evaluation_group }) => addedGroupIds.has(evaluation_group),
+    ),
+    excluded_existing_conditions: [],
+  });
 }
 
 export function buildReplacementBaseline(input: unknown, delta: SelectedDelta): BaselineCatalog {
@@ -387,7 +385,7 @@ export function buildReplacementBaseline(input: unknown, delta: SelectedDelta): 
         group.runs.map((run) => [
           run.repetition_index,
           {
-            label: run.source_run_id,
+            label: run.source_run_id ?? run.id,
             epsilon: run.dp.epsilon_upper_bound ?? null,
             delta: run.dp.delta ?? null,
           },

@@ -92,7 +92,7 @@
   height: 7rem;
 }
 
-.aimLine,
+.baselineLine,
 .targetLine {
   position: absolute;
   inset-inline: 0;

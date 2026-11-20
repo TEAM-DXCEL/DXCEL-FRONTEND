@@ -182,6 +182,7 @@ export function MetricComparison({
       <div className="flex flex-wrap items-center justify-between gap-control-gap text-caption text-foreground-muted">
         <p>
           점 평균 · 세로선 ± 표본 표준편차 · 점선 AIM
+          {" · 초록 테두리: AIM·Tab-PE·PrivPGD 모두보다 수치상 개선"}
           {hasExcludedBaseline && " · † 주 비교 제외"}
         </p>
         <ul className="flex flex-wrap gap-control-inset">
