@@ -89,7 +89,9 @@ export function RecordedOverview({
               if (
                 condition.dataset !== baseline.dataset ||
                 condition.experimentId === null ||
-                condition.referenceOnly
+                condition.referenceOnly ||
+                condition.primaryCondition === false ||
+                condition.includeInOverview === false
               )
                 return [];
               const values = groupMetrics.flatMap(({ metric }) => {
