@@ -5,13 +5,21 @@ import {
 } from "@/features/recorded-comparison/model";
 import styles from "./metric-comparison.module.css";
 
-type Reading = { mean: number | null; sampleSd: number | null; n: number; reason?: string | null };
+type Reading = {
+  mean: number | null;
+  sampleSd: number | null;
+  n: number;
+  reason?: string | null;
+  comparisonKey?: string | null;
+  comparisonKeys?: readonly string[];
+};
 export type OverviewSeries = {
   dataset: string;
   label: string;
   model?: string;
   excluded?: boolean;
   reference?: boolean;
+  referenceOnly?: boolean;
   comparisonNote?: string;
   metrics: Record<string, Reading>;
 };
@@ -42,8 +50,19 @@ export function MetricPlot({
   const baselineReadings = baselineIndices.map((index) =>
     series[index]?.excluded ? undefined : readings[index]?.mean,
   );
+  const comparisonKey = readings[experimentIndex]?.comparisonKey;
+  const comparable = Boolean(
+    comparisonKey &&
+    baselineIndices.every(
+      (index) =>
+        !series[index]?.excluded && readings[index]?.comparisonKeys?.includes(comparisonKey),
+    ),
+  );
+  const experiment = series[experimentIndex];
   const changes =
-    current != null && baselineReadings.every((value) => value != null)
+    !experiment?.referenceOnly &&
+    current != null &&
+    baselineReadings.every((value) => value != null)
       ? baselineReadings.map((value) => improvement(metric, current, value!))
       : null;
   const tone = changes?.every((change) => change != null && change > 0)
@@ -51,15 +70,14 @@ export function MetricPlot({
     : changes?.some((change) => change != null && change < 0)
       ? "worse"
       : undefined;
-  const experiment = series[experimentIndex];
   const comparisonStatus =
     current == null
       ? "실험 미측정"
-      : baselineReadings.some((value) => value == null)
-        ? "Baseline 미측정 · 세 기준 비교 불가"
-        : tone === "better"
-          ? `세 Baseline 모두보다 수치상 개선${experiment?.comparisonNote ? ` · ${experiment.comparisonNote}` : ""}`
-          : (experiment?.comparisonNote ?? "세 Baseline 모두보다 개선되지 않음");
+      : experiment?.referenceOnly
+        ? "참고용 조건 · 개선 강조 제외"
+        : baselineReadings.some((value) => value == null)
+          ? "Baseline 미측정 · 세 기준 비교 불가"
+          : `${tone === "better" ? "세 Baseline 모두보다 수치상 개선" : "세 Baseline 모두보다 개선되지 않음"} · ${experiment?.comparisonNote ?? "비교 조건 확인 필요"}${comparable ? "" : " · 지표별 비교 근거 확인 필요"}`;
   const position = (value: number) => ((high - value) / (high - low)) * 100;
   const format = (value: number) =>
     metric.statistic === "tpr_at_fpr"

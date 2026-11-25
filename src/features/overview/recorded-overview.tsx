@@ -63,7 +63,7 @@ export function RecordedOverview({
           세 지표 모두 Baseline보다 좋은 조건
         </h2>
         <p className="text-meta text-foreground-muted">
-          같은 데이터셋과 Baseline 안에서 세 지표의 비교 조건이 모두 확인된 결과를 최대 5건
+          같은 데이터셋과 Baseline 안에서 세 지표의 비교 조건이 모두 확인되고 모두 개선된 결과를
           표시합니다.
           {replacement &&
             " 비교는 기술 통계이며 비교 제한과 근거는 비교 화면에서 확인할 수 있습니다."}
@@ -106,9 +106,9 @@ export function RecordedOverview({
             const improved = comparable.filter(({ values }) =>
               values.every(({ delta }) => delta > 0),
             );
-            const visible = improved
-              .toSorted((a, b) => (b.condition.phase ?? 0) - (a.condition.phase ?? 0))
-              .slice(0, 5);
+            const visible = improved.toSorted(
+              (a, b) => (b.condition.phase ?? 0) - (a.condition.phase ?? 0),
+            );
             return (
               <section
                 key={baseline.id}

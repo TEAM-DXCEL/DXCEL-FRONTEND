@@ -68,8 +68,11 @@ export function SelectedPerformanceView({
         <h2 className="text-heading-sm">선정 실험 성능 비교</h2>
         {data.generationCounts.map((counts) => (
           <p key={counts.experimentId} className="text-caption text-foreground-muted">
-            {counts.experimentId} · 독립 DP 부모 {counts.independentParents}개 · 복원 출력·평가{" "}
-            {counts.outputs}개 · 조건별 n은 공유 부모 기준
+            {counts.experimentId} · {counts.sharedAcrossConditions ? "AIM 부모" : "독립 DP 부모"}{" "}
+            {counts.independentParents}개 · 복원 출력·평가 {counts.outputs}개 · 조건별 n은 공유 부모
+            기준
+            {counts.reusedPreprocessing > 0 &&
+              ` · EXP-170 표현 생성물 ${counts.reusedPreprocessing}개 재사용 · 조건 간 표현 생성물 공유`}
           </p>
         ))}
         <div className="my-control-inset grid gap-control-inset desktop:grid-cols-2">
@@ -288,6 +291,14 @@ export function SelectedPerformanceView({
                                   ` · 평가 추출 ${reading.evaluationCount}회`}
                                 {reading?.evaluationMissingReason &&
                                   ` · ${reading.evaluationMissingReason}`}
+                                {run?.preprocessing_source_experiment_id === "EXP-170" &&
+                                  run.preprocessing_release_id && (
+                                    <div>
+                                      EXP-170 표현 생성물 · {run.preprocessing_release_id}
+                                      <br />
+                                      {run.independence_limit}
+                                    </div>
+                                  )}
                                 {run?.counts_as_new_dp_generation !== undefined && (
                                   <details className="text-caption text-foreground-muted">
                                     <summary className="cursor-pointer">생성 출처와 부모</summary>
@@ -296,11 +307,28 @@ export function SelectedPerformanceView({
                                     {run.source_run_id_missing_reason && (
                                       <p>{run.source_run_id_missing_reason}</p>
                                     )}
+                                    {(run.source_evaluation_run_id !== undefined ||
+                                      run.evaluation_attempt !== undefined) && (
+                                      <>
+                                        <p className="break-all">
+                                          원본 평가 실행 ID · {run.source_evaluation_run_id ?? "—"}
+                                        </p>
+                                        {run.source_evaluation_run_id_missing_reason && (
+                                          <p>{run.source_evaluation_run_id_missing_reason}</p>
+                                        )}
+                                        <p>평가 attempt · {run.evaluation_attempt ?? "—"}</p>
+                                        {run.evaluation_attempt_missing_reason && (
+                                          <p>{run.evaluation_attempt_missing_reason}</p>
+                                        )}
+                                      </>
+                                    )}
                                     <p className="break-all">
                                       DP 부모 ID · {run.parent_dp_generation_id}
                                     </p>
                                     <p>
-                                      신규 DP 생성 ·{" "}
+                                      {run.preprocessing_source_experiment_id === "EXP-170"
+                                        ? "새 AIM 실행 · "
+                                        : "신규 DP 생성 · "}
                                       {run.counts_as_new_dp_generation
                                         ? "예"
                                         : "아니오 · 동일 부모 후처리"}

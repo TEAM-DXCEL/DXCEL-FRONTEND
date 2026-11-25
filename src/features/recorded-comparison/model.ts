@@ -122,7 +122,12 @@ export function baselineComparisonNote(
   baseline: RecordedBaseline,
   key: string,
   dataset: string,
-  evidence?: { baselineId: string; status: string; comparable?: boolean }[],
+  evidence?: {
+    baselineId: string;
+    status: string;
+    comparable?: boolean;
+    metricCompatibility?: import("./replacement").SelectedDelta["official_baseline_comparison_pairs"][number]["metric_compatibility"];
+  }[],
 ) {
   if (baseline.excluded) return "주 비교 제외·참고용";
   if (baseline.dataset !== dataset) return "비교 데이터셋이 다름";
@@ -130,6 +135,9 @@ export function baselineComparisonNote(
   if (stat?.mean == null)
     return stat ? (stat.missingReason ?? statusLabels[stat.status]) : "Baseline 지표 미측정";
   const pair = evidence?.find(({ baselineId }) => baselineId === baseline.id);
+  const compatibility = pair?.metricCompatibility?.find((entry) => entry.key === key);
+  if (pair?.metricCompatibility && !compatibility?.directly_comparable)
+    return compatibility?.missing_reason ?? compatibility?.status ?? "지표 비교 조건 확인 필요";
   return pair?.comparable ? pair.status : "비교 조건 확인 필요";
 }
 

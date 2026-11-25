@@ -71,24 +71,41 @@ export default async function ResultsPage({
   const pickReadings = (
     readings: Record<
       string,
-      { mean: number | null; sampleSd: number | null; n: number; missingReason?: string | null }
+      {
+        mean: number | null;
+        sampleSd: number | null;
+        n: number;
+        missingReason?: string | null;
+        comparisonKey?: string | null;
+        comparisonKeys?: readonly string[];
+      }
     >,
     missingReasons?: Record<string, string | null>,
   ) =>
     Object.fromEntries(
       Object.entries(readings)
         .filter(([key]) => overviewKeys.has(key))
-        .map(([key, { mean, sampleSd, n, missingReason }]) => [
+        .map(([key, { mean, sampleSd, n, missingReason, comparisonKey, comparisonKeys }]) => [
           key,
-          { mean, sampleSd, n, reason: missingReasons?.[key] ?? missingReason },
+          {
+            mean,
+            sampleSd,
+            n,
+            reason: missingReasons?.[key] ?? missingReason,
+            comparisonKey,
+            comparisonKeys,
+          },
         ]),
     );
   return (
     <DashboardPage title="실험 결과표">
       {selected?.generationCounts.map((counts) => (
         <p key={counts.experimentId} className="mb-control-gap text-caption text-foreground-muted">
-          {counts.experimentId} · 독립 DP 부모 {counts.independentParents}개 · 복원 출력·평가{" "}
-          {counts.outputs}개 · 조건별 n은 공유 부모 기준
+          {counts.experimentId} · {counts.sharedAcrossConditions ? "AIM 부모" : "독립 DP 부모"}{" "}
+          {counts.independentParents}개 · 복원 출력·평가 {counts.outputs}개 · 조건별 n은 공유 부모
+          기준
+          {counts.reusedPreprocessing > 0 &&
+            ` · EXP-170 표현 생성물 ${counts.reusedPreprocessing}개 재사용 · 조건 간 표현 생성물 공유`}
         </p>
       ))}
       <MetricComparison
@@ -106,6 +123,7 @@ export default async function ResultsPage({
         experiments={groups.map(({ condition, summaries }) => ({
           dataset: condition.dataset,
           label: `${condition.experimentId} · ${condition.label}${condition.referenceOnly ? " · 참고용" : ""}`,
+          referenceOnly: condition.referenceOnly || condition.primaryCondition === false,
           comparisonNote: condition.referenceOnly
             ? "참고용"
             : (condition.comparisonEvidence?.find(

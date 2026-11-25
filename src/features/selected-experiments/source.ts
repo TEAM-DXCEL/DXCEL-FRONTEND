@@ -9,6 +9,7 @@ import {
   replacementPairLimits,
   isDirectReplacementPair,
   replacementStatus,
+  type SelectedDelta,
 } from "@/features/recorded-comparison/replacement";
 import {
   localReplacementDirectory,
@@ -32,6 +33,8 @@ type SelectedEvaluations = {
     experiment_id: string;
     dataset: string;
     condition: string;
+    condition_id?: string;
+    arm_id?: string;
     runs: string[];
     display_name?: string;
     displayed_generation_n?: number;
@@ -55,12 +58,22 @@ type SelectedEvaluations = {
     experiment_id: string;
     dataset: string;
     condition: string;
+    condition_id?: string;
+    arm_id?: string;
     source_run_id: string | null;
     source_run_id_missing_reason?: string | null;
+    source_evaluation_run_id?: string | null;
+    source_evaluation_run_id_missing_reason?: string | null;
+    evaluation_attempt?: number | null;
+    evaluation_attempt_missing_reason?: string | null;
     parent_dp_generation_id?: string;
     parent_generation_id?: string | null;
     counts_as_new_dp_generation?: boolean;
     post_processing_only?: boolean;
+    preprocessing_release_id?: string;
+    preprocessing_source_experiment_id?: string;
+    independent_across_conditions?: boolean;
+    independence_limit?: string;
     repetition_index: number;
     generation_status: string;
     metrics: {
@@ -79,6 +92,7 @@ type SelectedEvaluations = {
     status: string;
     comparable?: boolean;
     limits?: string[];
+    metricCompatibility?: SelectedDelta["official_baseline_comparison_pairs"][number]["metric_compatibility"];
   }[];
   excludedGroupIds?: Set<string>;
 };
@@ -170,6 +184,7 @@ function mergeSelectedDelta(
       status: pair.status,
       comparable: isDirectReplacementPair(pair),
       limits: replacementPairLimits(pair),
+      metricCompatibility: pair.metric_compatibility,
     })),
     excludedGroupIds,
   };
@@ -283,11 +298,12 @@ export async function loadSelectedPerformance() {
           independentParentCount: independentParentCount(runs),
           comparisonEvidence: data.official_baseline_comparison_pairs
             .filter((pair) => pair.evaluation_group === group.id)
-            .map(({ baseline_id, status, comparable, limits }) => ({
+            .map(({ baseline_id, status, comparable, limits, metricCompatibility }) => ({
               baselineId: baseline_id,
               status,
               comparable,
               limits,
+              metricCompatibility,
             })),
           outputRows: [],
           runIds: group.runs,
@@ -296,7 +312,8 @@ export async function loadSelectedPerformance() {
         comparisonConditions: group.display_name
           ? {
               조건: group.condition,
-              생성_arm: group.generation_condition_id,
+              원본_조건: group.condition_id ?? group.generation_condition_id,
+              arm: group.arm_id ?? group.condition,
               decoder: group.decoder_id,
               표_별칭: group.derived_condition_id,
               주_조건: group.primary_condition,
@@ -322,6 +339,14 @@ export async function loadSelectedPerformance() {
           experimentId: id,
           independentParents,
           outputs: runs.length,
+          reusedPreprocessing: new Set(
+            runs.flatMap((run) =>
+              run.preprocessing_source_experiment_id === "EXP-170" && run.preprocessing_release_id
+                ? [run.preprocessing_release_id]
+                : [],
+            ),
+          ).size,
+          sharedAcrossConditions: runs.some((run) => run.independent_across_conditions === false),
         },
       ];
     }),
@@ -347,10 +372,17 @@ export async function loadSelectedPerformance() {
           {
             source_run_id: run.source_run_id,
             source_run_id_missing_reason: run.source_run_id_missing_reason,
+            source_evaluation_run_id: run.source_evaluation_run_id,
+            source_evaluation_run_id_missing_reason: run.source_evaluation_run_id_missing_reason,
+            evaluation_attempt: run.evaluation_attempt,
+            evaluation_attempt_missing_reason: run.evaluation_attempt_missing_reason,
             parent_dp_generation_id: run.parent_dp_generation_id,
             parent_generation_id: run.parent_generation_id,
             counts_as_new_dp_generation: run.counts_as_new_dp_generation,
             post_processing_only: run.post_processing_only,
+            preprocessing_release_id: run.preprocessing_release_id,
+            preprocessing_source_experiment_id: run.preprocessing_source_experiment_id,
+            independence_limit: run.independence_limit,
             repetition_index: run.repetition_index,
             metrics: run.metrics.map(
               ({ key, value, state, reason, evaluationCount, evaluationMissingReason }) => ({
@@ -416,7 +448,12 @@ export async function loadSelectedExperimentRows(): Promise<ExperimentListRow[]>
           ["평가 그룹", `${groups.length}개`],
           ...(independentParents !== undefined
             ? [
-                ["독립 DP 부모", `${independentParents}개`] as const,
+                [
+                  outputRuns.some((run) => run.independent_across_conditions === false)
+                    ? "AIM 부모 · 조건 간 표현 생성물 공유"
+                    : "독립 DP 부모",
+                  `${independentParents}개`,
+                ] as const,
                 ["복원 출력·평가", `${outputRuns.length}개`] as const,
               ]
             : []),

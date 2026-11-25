@@ -33,9 +33,20 @@ type Run = {
   experiment_id: string;
   dataset: string;
   condition: string;
+  condition_id?: string;
+  arm_id?: string;
+  decoder_id?: string | null;
+  preprocessing_release_id?: string;
+  preprocessing_source_experiment_id?: string;
+  independent_across_conditions?: boolean;
+  independence_limit?: string;
   repetition_index: number;
   source_run_id: string | null;
   source_run_id_missing_reason?: string | null;
+  source_evaluation_run_id?: string | null;
+  source_evaluation_run_id_missing_reason?: string | null;
+  evaluation_attempt?: number | null;
+  evaluation_attempt_missing_reason?: string | null;
   parent_generation_id?: string | null;
   counts_as_new_dp_generation?: boolean;
   post_processing_only?: boolean;
@@ -59,6 +70,15 @@ type ReplacementPair = {
   comparison_limits: string[];
   missing_reasons: string[];
   runtime_package_versions_missing_reason: string | null;
+  metric_compatibility?: {
+    key: string;
+    reference_scope: RecordedMetricDefinition["reference_scope"];
+    same_metric_definition: boolean;
+    both_have_valid_values: boolean;
+    directly_comparable: boolean;
+    status: string;
+    missing_reason: string | null;
+  }[];
 };
 
 type Group = {
@@ -66,6 +86,8 @@ type Group = {
   experiment_id: string;
   dataset: string;
   condition: string;
+  condition_id?: string;
+  arm_id?: string;
   category: "official_baseline" | "selected_experiment" | "reference";
   display_name: string;
   setting_name: string;
@@ -104,6 +126,9 @@ type Bundle = {
 
 export type SelectedDelta = Bundle & {
   baseline_catalog_ref: string;
+  baseline_catalog_sha256?: string;
+  existing_evaluation_updates?: unknown[];
+  existing_group_summary_updates?: unknown[];
   baseline_groups: unknown[];
   experiments: { id: string; type: string; display_name: string }[];
   evaluation_groups: (Group & { runs: string[] })[];
@@ -155,6 +180,25 @@ export function isDirectReplacementPair(pair: ReplacementPair) {
       "shared_evaluator_code_hashes_equal",
     ].every((key) => pair.conditions_checked[key] === true) &&
     pair.missing_reasons.length === 0
+  );
+}
+
+export function isCompatibleReplacementMetric(
+  pair: ReplacementPair,
+  metric: RecordedMetricDefinition,
+) {
+  if (!isDirectReplacementPair(pair)) return false;
+  // Earlier releases have pair-level evidence only. EXP-175 requires metric-level evidence.
+  if (!pair.metric_compatibility) return !pair.evaluation_group.startsWith("EXP-175:");
+  return pair.metric_compatibility.some(
+    (entry) =>
+      entry.key === metric.key &&
+      entry.reference_scope === metric.reference_scope &&
+      entry.same_metric_definition &&
+      entry.both_have_valid_values &&
+      entry.directly_comparable &&
+      entry.status !== "비교 조건 확인 필요" &&
+      entry.missing_reason === null,
   );
 }
 
@@ -241,36 +285,49 @@ function adaptBaseSelectedDelta(input: unknown) {
 
 export function adaptSelectedDelta(input: unknown) {
   const source = parseBundle<SelectedDelta>(input, "selected_experiments_delta");
-  if (!source.experiments.some(({ id }) => id === "EXP-165")) return adaptBaseSelectedDelta(source);
-
-  const addedGroupIds = new Set(
-    source.evaluation_groups
-      .filter(({ experiment_id }) => experiment_id === "EXP-165")
-      .map(({ id }) => id),
+  const additions = new Set(["EXP-165", "EXP-175"]);
+  const groupOwners = new Map(
+    source.evaluation_groups.map(({ id, experiment_id }) => [id, experiment_id]),
   );
-  const base = adaptBaseSelectedDelta({
+  const declared = new Set(source.experiments.map(({ id }) => id));
+  requireData(
+    declared.size === source.experiments.length &&
+      source.evaluation_groups.every(({ experiment_id }) => declared.has(experiment_id)) &&
+      source.generation_runs.every(({ experiment_id }) => declared.has(experiment_id)) &&
+      source.official_baseline_comparison_pairs.every(({ evaluation_group }) =>
+        groupOwners.has(evaluation_group),
+      ),
+    "실험 선언과 그룹·실행·비교 연결의 소속이 일치하지 않습니다.",
+  );
+  let result = adaptBaseSelectedDelta({
     ...source,
-    experiments: source.experiments.filter(({ id }) => id !== "EXP-165"),
-    evaluation_groups: source.evaluation_groups.filter(({ id }) => !addedGroupIds.has(id)),
+    experiments: source.experiments.filter(({ id }) => !additions.has(id)),
+    evaluation_groups: source.evaluation_groups.filter(
+      ({ experiment_id }) => !additions.has(experiment_id),
+    ),
     generation_runs: source.generation_runs.filter(
-      ({ experiment_id }) => experiment_id !== "EXP-165",
+      ({ experiment_id }) => !additions.has(experiment_id),
     ),
     official_baseline_comparison_pairs: source.official_baseline_comparison_pairs.filter(
-      ({ evaluation_group }) => !addedGroupIds.has(evaluation_group),
+      ({ evaluation_group }) => !additions.has(groupOwners.get(evaluation_group) ?? ""),
     ),
   });
-  return appendSelectedDelta(base, {
-    ...source,
-    experiments: source.experiments.filter(({ id }) => id === "EXP-165"),
-    evaluation_groups: source.evaluation_groups.filter(({ id }) => addedGroupIds.has(id)),
-    generation_runs: source.generation_runs.filter(
-      ({ experiment_id }) => experiment_id === "EXP-165",
-    ),
-    official_baseline_comparison_pairs: source.official_baseline_comparison_pairs.filter(
-      ({ evaluation_group }) => addedGroupIds.has(evaluation_group),
-    ),
-    excluded_existing_conditions: [],
-  });
+  for (const id of additions) {
+    if (!source.experiments.some((experiment) => experiment.id === id)) continue;
+    result = appendSelectedDelta(result, {
+      ...source,
+      experiments: source.experiments.filter((experiment) => experiment.id === id),
+      evaluation_groups: source.evaluation_groups.filter(
+        ({ experiment_id }) => experiment_id === id,
+      ),
+      generation_runs: source.generation_runs.filter(({ experiment_id }) => experiment_id === id),
+      official_baseline_comparison_pairs: source.official_baseline_comparison_pairs.filter(
+        ({ evaluation_group }) => groupOwners.get(evaluation_group) === id,
+      ),
+      excluded_existing_conditions: [],
+    });
+  }
+  return result;
 }
 
 export function buildReplacementBaseline(input: unknown, delta: SelectedDelta): BaselineCatalog {
@@ -332,12 +389,15 @@ export function buildReplacementBaseline(input: unknown, delta: SelectedDelta): 
       `공식 Baseline 분류 오류 (${group.id}).`,
     );
     const indexed = indexRuns(group, group.runs);
-    const comparisonKeys = delta.official_baseline_comparison_pairs
-      .filter((pair) => pair.baseline_id === group.id && isDirectReplacementPair(pair))
-      .map(({ evaluation_group }) => evaluation_group);
     const sourcePaths: string[] = [];
     const stats = group.summaries.map((summary) => {
       checkSummary(group, summary, indexed);
+      const metric = bundle.metric_definitions.find(({ key }) => key === summary.key)!;
+      const comparisonKeys = delta.official_baseline_comparison_pairs
+        .filter(
+          (pair) => pair.baseline_id === group.id && isCompatibleReplacementMetric(pair, metric),
+        )
+        .map(({ evaluation_group }) => evaluation_group);
       return [
         summary.key,
         {
