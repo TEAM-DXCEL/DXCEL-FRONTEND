@@ -19,6 +19,7 @@ const axes = [
   { name: "Utility", key: "xgb_full" },
   { name: "Fidelity", key: "wsd3" },
 ];
+const maxVisibleExperiments = 5;
 
 export function RecordedOverview({
   conditions,
@@ -64,7 +65,7 @@ export function RecordedOverview({
         </h2>
         <p className="text-meta text-foreground-muted">
           같은 데이터셋과 Baseline 안에서 세 지표의 비교 조건이 모두 확인되고 모두 개선된 결과를
-          표시합니다.
+          실험 번호가 큰 순서대로 최대 {maxVisibleExperiments}건 표시합니다.
           {replacement &&
             " 비교는 기술 통계이며 비교 제한과 근거는 비교 화면에서 확인할 수 있습니다."}
         </p>
@@ -106,9 +107,16 @@ export function RecordedOverview({
             const improved = comparable.filter(({ values }) =>
               values.every(({ delta }) => delta > 0),
             );
-            const visible = improved.toSorted(
-              (a, b) => (b.condition.phase ?? 0) - (a.condition.phase ?? 0),
-            );
+            const visible = improved
+              .toSorted(
+                (a, b) =>
+                  (b.condition.experimentId ?? "").localeCompare(
+                    a.condition.experimentId ?? "",
+                    "en",
+                    { numeric: true },
+                  ) || (b.condition.phase ?? 0) - (a.condition.phase ?? 0),
+              )
+              .slice(0, maxVisibleExperiments);
             return (
               <section
                 key={baseline.id}
