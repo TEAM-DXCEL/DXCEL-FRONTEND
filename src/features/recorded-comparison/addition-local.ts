@@ -2,14 +2,25 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { resolve, basename } from "node:path";
+import { resolve, basename, delimiter } from "node:path";
 import { cache } from "react";
 import { appendSelectedDelta } from "./addition";
 import type { SelectedDelta } from "./replacement";
 
+function localAdditionDirectories() {
+  if (process.env.NODE_ENV !== "development") return [];
+  const directories =
+    process.env.DXCEL_LOCAL_SELECTED_DELTA_DIRS ?? process.env.DXCEL_LOCAL_SELECTED_DELTA_DIR;
+  return directories
+    ? directories
+        .split(delimiter)
+        .filter(Boolean)
+        .map((directory) => resolve(directory))
+    : [];
+}
+
 export function localAdditionDirectory() {
-  const directory = process.env.DXCEL_LOCAL_SELECTED_DELTA_DIR;
-  return process.env.NODE_ENV === "development" && directory ? resolve(directory) : null;
+  return localAdditionDirectories()[0] ?? null;
 }
 
 const readValidatedAddition = cache(async (directory: string) => {
@@ -21,7 +32,12 @@ const readValidatedAddition = cache(async (directory: string) => {
   };
   if (!validation.passed) throw new Error("추가 데이터의 검증 완료 상태를 확인할 수 없습니다.");
   let input: unknown;
-  for (const name of ["selected_experiments.json", "source_manifest.json", "README.md"]) {
+  const hashes = validation.output_sha256;
+  for (const required of ["selected_experiments.json", "source_manifest.json", "README.md"]) {
+    if (!hashes[required]) throw new Error(`추가 파일의 검증 해시가 없습니다 (${required}).`);
+  }
+  for (const name of Object.keys(hashes)) {
+    if (basename(name) !== name) throw new Error("검증 파일은 전달본 내부 파일이어야 합니다.");
     const bytes = await readFile(/* turbopackIgnore: true */ resolve(directory, name));
     if (createHash("sha256").update(bytes).digest("hex") !== validation.output_sha256[name]) {
       throw new Error(`추가 파일의 검증 해시가 다릅니다 (${name}).`);
@@ -31,9 +47,7 @@ const readValidatedAddition = cache(async (directory: string) => {
   return input as SelectedDelta & { baseline_catalog_sha256: string };
 });
 
-export async function appendLocalAddition(current: SelectedDelta, baseline: unknown) {
-  const directory = localAdditionDirectory();
-  if (!directory) return current;
+async function appendDirectory(current: SelectedDelta, baseline: unknown, directory: string) {
   const input = await readValidatedAddition(directory);
   if (
     basename(input.baseline_catalog_ref) !== "dashboard-baselines.json" ||
@@ -42,7 +56,9 @@ export async function appendLocalAddition(current: SelectedDelta, baseline: unkn
     throw new Error("추가 데이터가 기존 Baseline 카탈로그를 참조하지 않습니다.");
   }
   const referenceBytes = await readFile(
-    /* turbopackIgnore: true */ resolve(directory, input.baseline_catalog_ref),
+    /* turbopackIgnore: true */ process.env.DXCEL_LOCAL_REPLACEMENT_DIR
+      ? resolve(process.env.DXCEL_LOCAL_REPLACEMENT_DIR, "dashboard-baselines.json")
+      : resolve(directory, input.baseline_catalog_ref),
   );
   if (createHash("sha256").update(referenceBytes).digest("hex") !== input.baseline_catalog_sha256) {
     throw new Error("기존 Baseline 참조 파일의 해시가 다릅니다.");
@@ -82,4 +98,12 @@ export async function appendLocalAddition(current: SelectedDelta, baseline: unkn
     throw new Error("등록된 Baseline의 수치 또는 그룹이 추가 데이터의 카탈로그 참조와 다릅니다.");
   }
   return appendSelectedDelta(current, input);
+}
+
+export async function appendLocalAddition(current: SelectedDelta, baseline: unknown) {
+  let result = current;
+  for (const directory of localAdditionDirectories()) {
+    result = await appendDirectory(result, baseline, directory);
+  }
+  return result;
 }

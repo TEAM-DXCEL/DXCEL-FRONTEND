@@ -24,6 +24,7 @@ export type ComparisonCondition = Omit<RecordedCondition, "phase"> & {
     status: string;
     comparable?: boolean;
     limits?: string[];
+    metricCompatibility?: import("./replacement").SelectedDelta["official_baseline_comparison_pairs"][number]["metric_compatibility"];
   }[];
 };
 

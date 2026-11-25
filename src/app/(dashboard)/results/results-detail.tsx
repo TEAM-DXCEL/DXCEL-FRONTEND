@@ -4,7 +4,7 @@ import type { RecordedBaseline } from "@/features/recorded-comparison/baseline-l
 import {
   datasetLabels,
   directionLabel,
-  improvement,
+  baselineDifference,
   formatMetricValue,
   recordedMetricName,
   scopeLabels,
@@ -163,6 +163,7 @@ export function ResultsDetail({
                       <th
                         key={id}
                         scope="col"
+                        data-group-id={id}
                         data-baseline={baseline}
                         data-reference={id === referenceBaseline?.id}
                       >
@@ -210,7 +211,12 @@ export function ResultsDetail({
                 return (
                   <tbody key={axis}>
                     {rows.map((metric, index) => (
-                      <tr key={metric.key} data-axis-start={index === 0}>
+                      <tr
+                        key={metric.key}
+                        data-metric-key={metric.key}
+                        data-reference-scope={metric.reference_scope}
+                        data-axis-start={index === 0}
+                      >
                         <th scope="row">
                           {index === 0 && (
                             <span className="mb-1 inline-block rounded-control bg-primary-subtle px-2 text-table-head text-primary-text">
@@ -228,8 +234,13 @@ export function ResultsDetail({
                             ? referenceBaseline?.metrics[metric.key]?.mean
                             : null;
                           const change =
-                            stat?.mean != null && reference != null
-                              ? improvement(metric, stat.mean, reference)
+                            reference != null
+                              ? baselineDifference(
+                                  metric,
+                                  datasetGroups.find(({ condition }) => condition.id === id)
+                                    ?.condition.metrics[metric.key],
+                                  referenceBaseline?.metrics[metric.key],
+                                )
                               : null;
                           const better = change !== null && change > 0;
                           const worse = change !== null && change < 0;
@@ -238,6 +249,7 @@ export function ResultsDetail({
                           return (
                             <td
                               key={id}
+                              data-group-id={id}
                               data-baseline={baseline}
                               data-reference={id === referenceBaseline?.id}
                               title={stat?.mean == null ? stat?.reason : stat?.mean.toString()}
