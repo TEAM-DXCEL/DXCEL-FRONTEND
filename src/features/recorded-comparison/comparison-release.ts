@@ -28,9 +28,12 @@ export const readComparisonRelease = cache(async () => {
 
   const { data, error } = await client
     .rpc("read_dashboard_comparison_release", {}, { get: true })
-    .abortSignal(AbortSignal.timeout(15_000));
+    .abortSignal(AbortSignal.timeout(60_000));
   if (error?.code === "PGRST202") return null;
-  if (error) throw new Error("Supabase에서 새 비교 데이터를 읽을 수 없습니다.");
+  if (error) {
+    console.error("Comparison release RPC failed", { code: error.code, message: error.message });
+    throw new Error("Supabase에서 새 비교 데이터를 읽을 수 없습니다.");
+  }
   if (data === null) return null;
   if (typeof data !== "object" || !("baseline_catalog" in data) || !("selected_delta" in data)) {
     throw new Error("Supabase 비교 데이터 형식이 올바르지 않습니다.");
